@@ -5,7 +5,11 @@ import { CarrinhoProvider } from "./context/CarrinhoContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: "Livraria Adriana",
@@ -18,11 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
+    <html lang="pt-BR" className={inter.variable}>
+      <body className="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
         <CarrinhoProvider>
           <Navbar />
-          <div className="pt-20 min-h-screen">
+          <div className="pt-20 flex-grow">
             {children}
           </div>
           <Footer />

@@ -1,0 +1,5 @@
+[33m75b320a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Corrigido configuração do Tailwind CSS e implementado estrutura básica do e-commerce de livraria
+[33mbc6214d[m Modificações na estrutura da aplicação: remoção de páginas de busca e produto, atualização da página principal
+[33m09e3a7a[m[33m ([m[1;31morigin/master[m[33m)[m Adiciona funcionalidade de busca de livros
+[33m8e78196[m Adiciona componente de rodapé à aplicação
+[33m7d69679[m Implementação da Livraria Online com funcionalidades de carrinho de compras
