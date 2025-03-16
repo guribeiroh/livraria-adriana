@@ -348,7 +348,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                     type="text"
                     placeholder="Digite a nova categoria"
                     name="category_id"
-                    value={formData.category_id}
+                    value={formData.category_id || ''}
                     onChange={handleChange}
                     className={`flex-1 block w-full border ${
                       errors.category_id ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
