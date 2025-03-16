@@ -66,22 +66,11 @@ export async function middleware(req: NextRequest) {
     // Lista de rotas que requerem autenticação
     const protectedRoutes = [
       '/perfil',
-      '/admin',
       '/carrinho/checkout'
-    ];
-    
-    // Lista de rotas que requerem permissão de administrador
-    const adminRoutes = [
-      '/admin'
     ];
     
     // Verificar se a rota atual está protegida
     const isProtectedRoute = protectedRoutes.some(route => 
-      req.nextUrl.pathname.startsWith(route)
-    );
-    
-    // Verificar se a rota atual requer permissão de administrador
-    const isAdminRoute = adminRoutes.some(route => 
       req.nextUrl.pathname.startsWith(route)
     );
     
@@ -90,21 +79,6 @@ export async function middleware(req: NextRequest) {
       const url = new URL('/login', req.url);
       url.searchParams.set('next', req.nextUrl.pathname);
       return NextResponse.redirect(url);
-    }
-    
-    // Se a rota requerer permissão de administrador, verificar o perfil do usuário
-    if (isAdminRoute && session?.user) {
-      // Buscar informações do perfil do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-        
-      if (profileError || !profile || profile.role !== 'admin') {
-        // Redirecionar para a página inicial se não for admin
-        return NextResponse.redirect(new URL('/', req.url));
-      }
     }
 
     return res;

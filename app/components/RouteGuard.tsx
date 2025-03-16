@@ -14,22 +14,22 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
   const router = useRouter();
   const pathname = usePathname();
 
+  // Para o painel admin, não precisamos mais de verificação
+  if (requireAdmin) {
+    // Renderizar conteúdo diretamente, sem verificação
+    return <>{children}</>;
+  }
+
   useEffect(() => {
-    // Verificar autenticação somente após o carregamento inicial
+    // Verificar autenticação somente após o carregamento inicial e apenas para rotas não-admin
     if (!carregando) {
-      // Se não há usuário, redirecionar para login
+      // Se não há usuário, redirecionar para login (apenas para rotas protegidas que não são admin)
       if (!usuario) {
         router.push(`/login?next=${encodeURIComponent(pathname)}`);
         return;
       }
-      
-      // Verificar se rota requer admin e usuário tem permissão
-      if (requireAdmin && !isAdmin()) {
-        router.push('/');
-        return;
-      }
     }
-  }, [usuario, carregando, pathname, router, requireAdmin, isAdmin]);
+  }, [usuario, carregando, pathname, router]);
 
   // Exibir nada enquanto a verificação de autenticação está em andamento
   if (carregando) {
@@ -40,16 +40,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
     );
   }
 
-  // Se o usuário não estiver autenticado, não renderizar nada
+  // Se o usuário não estiver autenticado, não renderizar nada (apenas para rotas não-admin)
   if (!usuario) {
     return null;
   }
   
-  // Verificar permissão se necessário
-  if (requireAdmin && !isAdmin()) {
-    return null;
-  }
-
   // Renderizar o conteúdo protegido
   return <>{children}</>;
 } 
