@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCarrinho } from '../../context/CarrinhoContext';
-import { livros } from '../../data/livros';
+import { Book } from '../../lib/supabase';
 import { Livro } from '../../types';
+import BookCard from '../../components/BookCard';
+import Button from '../../components/Button';
 
 export default function UpsellPage() {
   const router = useRouter();
   const { carrinho, adicionarItem } = useCarrinho();
-  const [livrosRecomendados, setLivrosRecomendados] = useState<Livro[]>([]);
-  const [livrosaSelecionar, setLivrosASelecionar] = useState<number>(0);
+  const [livrosRecomendados, setLivrosRecomendados] = useState<Book[]>([]);
+  const [livrosASelecionados, setLivrosASelecionados] = useState<number>(0);
   const [livrosSelecionados, setLivrosSelecionados] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [dadosCliente, setDadosCliente] = useState<any>(null);
@@ -34,7 +36,7 @@ export default function UpsellPage() {
   useEffect(() => {
     const totalLivros = carrinho.itens.reduce((total, item) => total + item.quantidade, 0);
     const faltam = Math.max(0, 4 - totalLivros);
-    setLivrosASelecionar(faltam);
+    setLivrosASelecionados(faltam);
 
     // Se já tiver 4 ou mais livros, pular para a confirmação
     if (faltam === 0) {
@@ -42,166 +44,217 @@ export default function UpsellPage() {
     }
   }, [carrinho.itens, router]);
 
-  // Gerar recomendações de livros
+  // Gerar recomendações de livros do Supabase
   useEffect(() => {
     // IDs dos livros que já estão no carrinho
     const idsNoCarrinho = carrinho.itens.map(item => item.livro.id);
     
-    // Categorias dos livros no carrinho para recomendar livros semelhantes
-    const categoriasNoCarrinho = [...new Set(carrinho.itens.map(item => item.livro.categoria))];
+    // Buscar livros recomendados baseados nos bestsellers ou featured
+    async function buscarRecomendacoes() {
+      try {
+        const response = await fetch('/api/books?bestseller=true&limit=10');
+        const data = await response.json();
+        
+        if (data.success) {
+          // Filtramos os livros que já estão no carrinho
+          const recomendacoes = data.data.filter((livro: Book) => 
+            !idsNoCarrinho.includes(livro.id)
+          );
+          
+          setLivrosRecomendados(recomendacoes.slice(0, 8));
+        }
+      } catch (error) {
+        console.error('Erro ao buscar recomendações:', error);
+      }
+    }
     
-    // Filtra livros que não estão no carrinho e prioriza os da mesma categoria
-    const livrosDisponiveis = livros.filter(livro => 
-      !idsNoCarrinho.includes(livro.id) && livro.disponivel
-    );
-    
-    // Ordena por prioridade (primeiro os das mesmas categorias)
-    const livrosOrdenados = [...livrosDisponiveis].sort((a, b) => {
-      const aTemCategoria = categoriasNoCarrinho.includes(a.categoria) ? 1 : 0;
-      const bTemCategoria = categoriasNoCarrinho.includes(b.categoria) ? 1 : 0;
-      return bTemCategoria - aTemCategoria;
-    });
-    
-    // Pega os primeiros N livros (onde N é o que falta para 4)
-    setLivrosRecomendados(livrosOrdenados.slice(0, livrosaSelecionar + 2)); // +2 para dar mais opções
-  }, [livrosaSelecionar, carrinho.itens]);
+    buscarRecomendacoes();
+  }, [carrinho.itens]);
 
-  // Alternar seleção de livro
   const toggleSelecionarLivro = (livroId: string) => {
-    if (livrosSelecionados.includes(livroId)) {
-      // Remover da seleção
-      setLivrosSelecionados(prev => prev.filter(id => id !== livroId));
-    } else {
-      // Verificar se já atingiu o máximo
-      if (livrosSelecionados.length < livrosaSelecionar) {
-        // Adicionar à seleção
-        setLivrosSelecionados(prev => [...prev, livroId]);
+    setLivrosSelecionados(prevSelecionados => {
+      if (prevSelecionados.includes(livroId)) {
+        // Remover o livro da seleção
+        return prevSelecionados.filter(id => id !== livroId);
+      } else {
+        // Adicionar o livro à seleção, mas não permitir mais que o limite
+        if (prevSelecionados.length < livrosASelecionados) {
+          return [...prevSelecionados, livroId];
+        }
+        return prevSelecionados;
       }
-    }
+    });
   };
 
-  // Adicionar todos os livros selecionados ao carrinho
   const adicionarAoCarrinho = () => {
-    for (const livroId of livrosSelecionados) {
-      const livro = livros.find(l => l.id === livroId);
-      if (livro) {
-        adicionarItem(livro);
-      }
-    }
-  };
-
-  // Finalizar pedido (adicionar ao carrinho e ir para página de confirmação)
-  const finalizarPedido = () => {
     setCarregando(true);
     
-    // Adicionar livros selecionados ao carrinho
-    adicionarAoCarrinho();
+    // Para cada livro selecionado, adicionar ao carrinho
+    livrosSelecionados.forEach(async (livroId) => {
+      const livro = livrosRecomendados.find(l => l.id === livroId);
+      if (livro) {
+        // Converter o formato Book para o formato Livro que o carrinho espera
+        const livroAdaptado: Livro = {
+          id: livro.id,
+          titulo: livro.title,
+          autor: livro.author,
+          descricao: livro.description || '',
+          preco: livro.price,
+          precoOriginal: livro.original_price,
+          imagemUrl: livro.cover_image || '',
+          paginas: livro.pages || 0,
+          categoria: livro.category?.name || '',
+          isbn: livro.isbn || '',
+          anoPublicacao: livro.publication_year || new Date().getFullYear(),
+          disponivel: livro.stock && livro.stock > 0 ? true : false
+        };
+        
+        adicionarItem(livroAdaptado);
+      }
+    });
     
-    // Simular processamento
+    // Redirecionar para a tela de confirmação após adicionar os livros
     setTimeout(() => {
       router.push('/checkout/confirmacao');
-      setCarregando(false);
-    }, 1000);
+    }, 500);
   };
 
-  // Se já tem 4 livros, não exibe esta página
-  if (livrosaSelecionar === 0) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Redirecionando...</p>
-      </div>
-    );
-  }
+  const finalizarPedido = () => {
+    router.push('/checkout/confirmacao');
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Oferta Especial!</h1>
-      
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <div className="bg-primary-50 p-4 rounded-lg mb-6">
-          <h2 className="text-2xl font-semibold text-primary-800 mb-2">
-            Monte seu combo de 4 livros!
-          </h2>
-          <p className="text-gray-700">
-            {livrosaSelecionar === 1 ? (
-              <>Falta apenas <strong>1 livro</strong> para completar seu combo de 4 livros!</>
-            ) : (
-              <>Faltam <strong>{livrosaSelecionar} livros</strong> para completar seu combo de 4 livros!</>
-            )}
-          </p>
-          <p className="mt-2 text-primary-600 font-medium">
-            Selecione {livrosaSelecionar === 1 ? 'o livro' : 'os livros'} que deseja adicionar:
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {livrosRecomendados.map(livro => (
-            <div 
-              key={livro.id} 
-              className={`border rounded-lg overflow-hidden cursor-pointer transition-all 
-                ${livrosSelecionados.includes(livro.id) 
-                  ? 'border-primary-500 shadow-md transform scale-105' 
-                  : 'border-gray-200 hover:border-primary-300'}`}
-              onClick={() => toggleSelecionarLivro(livro.id)}
-            >
-              <div className="aspect-[5/8] relative">
-                <Image 
-                  src={livro.imagemUrl} 
-                  alt={livro.titulo}
-                  fill
-                  className="object-contain"
-                />
-                {livrosSelecionados.includes(livro.id) && (
-                  <div className="absolute top-2 right-2 bg-primary-500 text-white rounded-full p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 line-clamp-2">{livro.titulo}</h3>
-                <p className="text-gray-600 text-sm">{livro.autor}</p>
-                <p className="text-primary-600 font-bold mt-2">R$ {livro.preco.toFixed(2)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6">
-          <Link 
-            href="/checkout"
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 text-center hover:bg-gray-50 transition-colors"
-          >
-            Voltar
-          </Link>
-          
-          <div className="flex-1 sm:text-right">
-            <p className="text-gray-700 mb-2">
-              {livrosSelecionados.length} de {livrosaSelecionar} livros selecionados
+    <div className="min-h-screen bg-primary-50 py-10">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-primary-800 mb-2">Aproveite nossa promoção especial!</h1>
+            <p className="text-lg text-primary-600">
+              Compre 4 livros e ganhe <span className="font-semibold">15% de desconto</span> no total!
             </p>
-            
-            <button
-              type="button"
-              onClick={finalizarPedido}
-              disabled={carregando || (livrosaSelecionar > 0 && livrosSelecionados.length === 0)}
-              className={`px-6 py-3 rounded-md text-white transition-colors ${
-                livrosaSelecionar === livrosSelecionados.length || livrosaSelecionar === 0
-                  ? 'bg-primary-600 hover:bg-primary-700'
-                  : livrosSelecionados.length > 0
-                    ? 'bg-amber-500 hover:bg-amber-600'
-                    : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {carregando 
-                ? 'Processando...' 
-                : livrosSelecionados.length === 0 
-                  ? 'Selecione ao menos um livro' 
-                  : livrosaSelecionar === livrosSelecionados.length 
-                    ? 'Finalizar Pedido' 
-                    : 'Continuar sem completar o combo'}
-            </button>
+            <div className="mt-4 bg-white p-4 rounded-lg shadow-sm inline-block">
+              <p className="text-primary-700">
+                Você já tem <span className="font-bold">{4 - livrosASelecionados}</span> livro(s) no carrinho. 
+                {livrosASelecionados > 0 && (
+                  <span> Adicione mais <span className="font-bold text-primary-600">{livrosASelecionados}</span> para aproveitar o desconto!</span>
+                )}
+              </p>
+            </div>
           </div>
+          
+          {livrosASelecionados > 0 ? (
+            <>
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-xl font-semibold text-primary-800 mb-4">
+                  Recomendações personalizadas para você
+                </h2>
+                <p className="text-primary-600 mb-6">
+                  Selecione {livrosASelecionados} livro(s) abaixo para completar sua oferta:
+                </p>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {livrosRecomendados.map((livro) => (
+                    <div key={livro.id} className="relative">
+                      <div className={`
+                        absolute inset-0 z-10 bg-white bg-opacity-70 flex items-center justify-center transition-opacity
+                        ${livrosSelecionados.includes(livro.id) ? 'opacity-100' : 'opacity-0 hover:opacity-80'}
+                      `}>
+                        <button 
+                          onClick={() => toggleSelecionarLivro(livro.id)}
+                          className={`
+                            rounded-full p-3
+                            ${livrosSelecionados.includes(livro.id) 
+                              ? 'bg-primary-600 text-white' 
+                              : 'bg-white text-primary-600 border border-primary-600'}
+                          `}
+                        >
+                          {livrosSelecionados.includes(livro.id) ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      <div 
+                        className={`border-2 rounded-lg overflow-hidden transition-all ${
+                          livrosSelecionados.includes(livro.id) 
+                            ? 'border-primary-600 shadow-md transform scale-[1.02]' 
+                            : 'border-transparent'
+                        }`}
+                      >
+                        <div className="relative h-56 bg-primary-50">
+                          <Image 
+                            src={livro.cover_image || '/images/book-placeholder.jpg'} 
+                            alt={livro.title} 
+                            fill
+                            style={{ objectFit: 'contain' }}
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-medium text-primary-800 line-clamp-1">{livro.title}</h3>
+                          <p className="text-xs text-primary-600 line-clamp-1">{livro.author}</p>
+                          <p className="text-sm font-semibold text-primary-700 mt-1">
+                            R${livro.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                  <p className="text-primary-600">
+                    {livrosSelecionados.length} de {livrosASelecionados} livros selecionados
+                  </p>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="secondary" 
+                      onClick={finalizarPedido}
+                    >
+                      Pular esta oferta
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      onClick={adicionarAoCarrinho}
+                      disabled={livrosSelecionados.length === 0 || carregando}
+                    >
+                      {carregando ? 'Adicionando...' : `Adicionar ${livrosSelecionados.length > 0 ? livrosSelecionados.length : ''} ao carrinho`}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-xl shadow-md p-8 text-center">
+              <div className="flex justify-center mb-6">
+                <Image 
+                  src="/images/shopping-success.svg"
+                  alt="Sucesso"
+                  width={150}
+                  height={150}
+                />
+              </div>
+              <h2 className="text-2xl font-bold text-primary-800 mb-2">
+                Parabéns! Você já tem o mínimo de livros para o desconto especial!
+              </h2>
+              <p className="text-primary-600 mb-6">
+                Continue para finalizar seu pedido e aproveitar 15% de desconto no total.
+              </p>
+              <Button 
+                variant="primary" 
+                onClick={finalizarPedido}
+                size="lg"
+              >
+                Continuar para finalizar pedido
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -29,10 +29,9 @@ export async function GET(request: NextRequest, { params }: Params) {
       success: true, 
       data: books,
       meta: {
-        categorySlug: slug,
         limit,
         offset,
-        total: books.length // Idealmente, deveria vir do banco com um count total
+        category_slug: slug
       }
     });
   } catch (error) {

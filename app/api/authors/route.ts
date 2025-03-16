@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllCategories } from '@/app/lib/database';
+import { getAuthors } from '@/app/lib/database';
 
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
-    const categories = await getAllCategories();
+    const authors = await getAuthors();
     
     return NextResponse.json({ 
       success: true, 
-      data: categories
+      data: authors
     });
   } catch (error) {
-    console.error('Erro ao buscar categorias:', error);
+    console.error('Erro ao buscar autores:', error);
     return NextResponse.json(
-      { success: false, error: 'Erro ao buscar categorias' },
+      { success: false, error: 'Erro ao buscar autores' },
       { status: 500 }
     );
   }

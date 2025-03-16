@@ -47,46 +47,52 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 }
 
 export async function getBooks(limit: number = 20, offset: number = 0): Promise<Book[]> {
-  const { data, error } = await supabase
-    .from('books')
-    .select(`
-      *,
-      category:categories(id, name, slug)
-    `)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        *,
+        category:categories(id, name, slug)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (error) {
-    console.error('Erro ao buscar livros:', error);
+    if (error) {
+      console.error('Erro ao buscar livros:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Erro não tratado ao buscar livros:', err);
     return [];
   }
-
-  return data || [];
 }
 
 export async function getBooksByCategory(categorySlug: string, limit: number = 20, offset: number = 0): Promise<Book[]> {
-  const category = await getCategoryBySlug(categorySlug);
-  
-  if (!category) return [];
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        *,
+        category:categories(id, name, slug)
+      `)
+      .eq('is_active', true)
+      .eq('categories.slug', categorySlug)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  const { data, error } = await supabase
-    .from('books')
-    .select(`
-      *,
-      category:categories(id, name, slug)
-    `)
-    .eq('category_id', category.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    if (error) {
+      console.error(`Erro ao buscar livros da categoria ${categorySlug}:`, error);
+      return [];
+    }
 
-  if (error) {
-    console.error(`Erro ao buscar livros da categoria ${categorySlug}:`, error);
+    return data || [];
+  } catch (err) {
+    console.error(`Erro não tratado ao buscar livros da categoria ${categorySlug}:`, err);
     return [];
   }
-
-  return data || [];
 }
 
 export async function getBookBySlug(slug: string): Promise<Book | null> {
@@ -732,5 +738,45 @@ export async function deleteOrder(id: string) {
   } catch (err) {
     console.error('[DATABASE] Erro ao excluir pedido:', err);
     return false;
+  }
+}
+
+export async function getAllCategories(): Promise<Category[]> {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('Erro ao buscar todas as categorias:', error);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro não tratado ao buscar todas as categorias:', err);
+    return [];
+  }
+}
+
+export async function getAuthors(): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select('author')
+      .order('author');
+
+    if (error) {
+      console.error('Erro ao buscar autores:', error);
+      return [];
+    }
+
+    // Extrair autores únicos
+    const uniqueAuthors = Array.from(new Set(data.map(book => book.author)));
+    return uniqueAuthors;
+  } catch (err) {
+    console.error('Erro não tratado ao buscar autores:', err);
+    return [];
   }
 } 

@@ -2,29 +2,65 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { livros } from '../../data/livros';
+import { useBookDetail } from '../../hooks/useBooks';
 import { Livro } from '../../types';
 import { useCarrinho } from '../../context/CarrinhoContext';
 import Link from 'next/link';
 import Button from '../../components/Button';
 import Badge from '../../components/Badge';
-import LivroCard from '../../components/LivroCard';
+import BookCard from '../../components/BookCard';
+import { Book } from '../../lib/supabase';
 
 export default function ProdutoPage({ params }: { params: { id: string } }) {
-  const [livro, setLivro] = useState<Livro | null>(null);
+  const { book, isLoading, error } = useBookDetail(params.id);
   const [quantidade, setQuantidade] = useState(1);
   const [tabAtiva, setTabAtiva] = useState<'descricao' | 'detalhes'>('descricao');
   const { adicionarItem } = useCarrinho();
   const [botaoAnimado, setBotaoAnimado] = useState(false);
+  const [livrosRelacionados, setLivrosRelacionados] = useState<Book[]>([]);
 
+  // Buscar livros relacionados quando o livro carrega
   useEffect(() => {
-    const livroEncontrado = livros.find(l => l.id === params.id);
-    if (livroEncontrado) {
-      setLivro(livroEncontrado);
+    if (book && book.category?.id) {
+      // Podemos utilizar a API para buscar livros da mesma categoria
+      fetch(`/api/books/category/${book.category.slug}?limit=4`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Filtrar o livro atual dos relacionados
+            const relacionados = data.data.filter((l: Book) => l.id !== book.id);
+            setLivrosRelacionados(relacionados.slice(0, 4));
+          }
+        })
+        .catch(err => console.error('Erro ao buscar livros relacionados:', err));
     }
-  }, [params.id]);
+  }, [book]);
 
-  if (!livro) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-primary-50">
+        <div className="container mx-auto px-4 py-20">
+          <div className="bg-white rounded-xl shadow-md p-10">
+            <div className="animate-pulse">
+              <div className="h-10 bg-gray-200 rounded w-3/4 mb-6"></div>
+              <div className="flex flex-col md:flex-row gap-8">
+                <div className="md:w-1/3 aspect-[3/4] bg-gray-200 rounded"></div>
+                <div className="md:w-2/3 space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-12 bg-gray-200 rounded w-1/3 mt-8"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !book) {
     return (
       <div className="min-h-screen bg-primary-50">
         <div className="container mx-auto px-4 py-20 text-center">
@@ -41,8 +77,24 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
   }
 
   const handleAdicionarAoCarrinho = () => {
+    // Converter do formato Book para o formato que o carrinho espera (Livro)
+    const livroAdaptado: Livro = {
+      id: book.id,
+      titulo: book.title,
+      autor: book.author,
+      descricao: book.description || '',
+      preco: book.price,
+      precoOriginal: book.original_price,
+      imagemUrl: book.cover_image || '',
+      paginas: book.pages || 0,
+      categoria: book.category?.name || '',
+      isbn: book.isbn || '',
+      anoPublicacao: book.publication_year || new Date().getFullYear(),
+      disponivel: book.stock && book.stock > 0 ? true : false
+    };
+    
     for (let i = 0; i < quantidade; i++) {
-      adicionarItem(livro);
+      adicionarItem(livroAdaptado);
     }
     
     // Ativar animação do botão
@@ -51,11 +103,6 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
       setBotaoAnimado(false);
     }, 600);
   };
-
-  // Livros relacionados - mesma categoria
-  const livrosRelacionados = livros
-    .filter(l => l.categoria === livro.categoria && l.id !== livro.id)
-    .slice(0, 4);
 
   return (
     <main className="min-h-screen bg-primary-50 pb-16">
@@ -66,11 +113,11 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
             Início
           </Link>
           <span className="mx-2">/</span>
-          <Link href={`/categoria/${livro.categoria.toLowerCase()}`} className="hover:text-primary-800 transition-colors">
-            {livro.categoria}
+          <Link href={`/categoria/${book.category?.slug}`} className="hover:text-primary-800 transition-colors">
+            {book.category?.name}
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-primary-400">{livro.titulo}</span>
+          <span className="text-primary-400">{book.title}</span>
         </div>
       </div>
 
@@ -82,8 +129,8 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
             <div className="flex flex-col space-y-4">
               <div className="relative w-full aspect-[5/8] max-w-md mx-auto bg-primary-50 rounded-lg overflow-hidden border border-primary-100">
                 <Image
-                  src={livro.imagemUrl}
-                  alt={livro.titulo}
+                  src={book.cover_image || '/placeholder.jpg'}
+                  alt={book.title}
                   fill
                   style={{ objectFit: 'contain' }}
                   className="p-4"
@@ -95,12 +142,12 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
 
             {/* Detalhes do livro */}
             <div className="flex flex-col">
-              <h1 className="text-3xl font-display font-bold text-primary-800 mb-2">{livro.titulo}</h1>
-              <p className="text-xl text-primary-600 mb-4">por <span className="font-medium">{livro.autor}</span></p>
+              <h1 className="text-3xl font-display font-bold text-primary-800 mb-2">{book.title}</h1>
+              <p className="text-xl text-primary-600 mb-4">por <span className="font-medium">{book.author}</span></p>
               
               <div className="flex space-x-2 mb-4">
-                <Badge>{livro.categoria}</Badge>
-                {livro.disponivel ? (
+                <Badge>{book.category?.name}</Badge>
+                {book.stock && book.stock > 0 ? (
                   <Badge variant="success">Em estoque</Badge>
                 ) : (
                   <Badge variant="error">Indisponível</Badge>
@@ -109,20 +156,20 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
 
               <div className="bg-primary-50 p-5 rounded-lg mb-6 border border-primary-100">
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-primary-800">R${livro.preco.toFixed(2)}</span>
-                  {livro.precoOriginal && livro.precoOriginal > livro.preco && (
+                  <span className="text-3xl font-bold text-primary-800">R${book.price.toFixed(2)}</span>
+                  {book.original_price && book.original_price > book.price && (
                     <span className="ml-2 text-lg text-primary-400 line-through">
-                      R${livro.precoOriginal.toFixed(2)}
+                      R${book.original_price.toFixed(2)}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-primary-600 mt-1">
-                  {livro.disponivel ? 'Pronta entrega' : 'Indisponível'}
+                  {book.stock && book.stock > 0 ? 'Pronta entrega' : 'Indisponível'}
                 </p>
               </div>
 
               <div className="mb-6">
-                <p className="text-primary-700 line-clamp-3">{livro.descricao}</p>
+                <p className="text-primary-700 line-clamp-3">{book.description}</p>
                 <button 
                   onClick={() => setTabAtiva('descricao')}
                   className="text-sm text-primary-600 hover:text-primary-800 hover:underline mt-2"
@@ -133,16 +180,16 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
 
               <div className="grid grid-cols-2 gap-4 text-sm text-primary-600 mb-8 bg-primary-50 p-4 rounded-lg border border-primary-100">
                 <div>
-                  <p><span className="font-semibold">Categoria:</span> {livro.categoria}</p>
-                  <p><span className="font-semibold">Ano:</span> {livro.anoPublicacao}</p>
+                  <p><span className="font-semibold">Categoria:</span> {book.category?.name}</p>
+                  <p><span className="font-semibold">Ano:</span> {book.publication_year}</p>
                 </div>
                 <div>
-                  <p><span className="font-semibold">Páginas:</span> {livro.paginas}</p>
-                  <p><span className="font-semibold">ISBN:</span> {livro.isbn}</p>
+                  <p><span className="font-semibold">Páginas:</span> {book.pages}</p>
+                  <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
                 </div>
               </div>
 
-              {livro.disponivel && (
+              {book.stock && book.stock > 0 && (
                 <div className="mt-auto space-y-4">
                   <div className="flex items-center">
                     <label htmlFor="quantidade" className="mr-3 text-primary-800 font-medium">Quantidade:</label>
@@ -215,7 +262,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
           <div className="p-8">
             {tabAtiva === 'descricao' && (
               <div className="prose prose-primary max-w-none">
-                <p className="text-primary-700">{livro.descricao}</p>
+                <p className="text-primary-700">{book.description}</p>
                 <p className="text-primary-700 mt-4">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc sit amet ultricies lacinia, 
                   nisi nisl aliquam nunc, vitae aliquam nisl nunc sit amet nunc. Sed euismod, nunc sit amet ultricies lacinia,
@@ -231,27 +278,27 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
                     <tbody>
                       <tr className="border-b border-primary-100">
                         <td className="py-2 font-medium">Título</td>
-                        <td className="py-2">{livro.titulo}</td>
+                        <td className="py-2">{book.title}</td>
                       </tr>
                       <tr className="border-b border-primary-100">
                         <td className="py-2 font-medium">Autor</td>
-                        <td className="py-2">{livro.autor}</td>
+                        <td className="py-2">{book.author}</td>
                       </tr>
                       <tr className="border-b border-primary-100">
                         <td className="py-2 font-medium">Categoria</td>
-                        <td className="py-2">{livro.categoria}</td>
+                        <td className="py-2">{book.category?.name}</td>
                       </tr>
                       <tr className="border-b border-primary-100">
                         <td className="py-2 font-medium">Ano de Publicação</td>
-                        <td className="py-2">{livro.anoPublicacao}</td>
+                        <td className="py-2">{book.publication_year}</td>
                       </tr>
                       <tr className="border-b border-primary-100">
                         <td className="py-2 font-medium">Páginas</td>
-                        <td className="py-2">{livro.paginas}</td>
+                        <td className="py-2">{book.pages}</td>
                       </tr>
                       <tr>
                         <td className="py-2 font-medium">ISBN</td>
-                        <td className="py-2">{livro.isbn}</td>
+                        <td className="py-2">{book.isbn}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -292,16 +339,14 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Produtos relacionados */}
-        <section className="mt-16 mb-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-primary-800 mb-6">Você também pode gostar</h2>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-              {livrosRelacionados.map((livro, index) => (
-                <LivroCard key={livro.id} livro={livro} index={index} />
-              ))}
-            </div>
+        {/* Livros relacionados */}
+        <section className="container mx-auto px-4 pt-16">
+          <h2 className="text-2xl font-display font-bold text-primary-800 mb-6">Livros relacionados</h2>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+            {livrosRelacionados.map((livroRelacionado, index) => (
+              <BookCard key={livroRelacionado.id} book={livroRelacionado} index={index} />
+            ))}
           </div>
         </section>
       </div>
