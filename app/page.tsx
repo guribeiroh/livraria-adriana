@@ -111,12 +111,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <SectionTitle
             subtitle="Acabaram de chegar"
-            title="Novos Lançamentos"
             align="center"
           >
-            <p className="text-primary-600 max-w-2xl mx-auto text-center">
-              Fique por dentro das últimas novidades literárias. Novas histórias e aventuras para explorar.
-            </p>
+            Novos Lançamentos
           </SectionTitle>
           
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-10">
