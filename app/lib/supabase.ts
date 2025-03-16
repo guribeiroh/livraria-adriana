@@ -120,6 +120,12 @@ export interface Book {
   stock?: number;
   featured?: boolean;
   discount_percentage?: number;
+  original_price?: number | null;
+  cover_image?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  is_bestseller?: boolean;
+  is_new?: boolean;
   created_at?: string;
   updated_at?: string;
 }
