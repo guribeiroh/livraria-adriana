@@ -206,8 +206,8 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
 
       // Remover campos vazios ou undefined
       Object.keys(bookDataToSave).forEach(key => {
-        if (bookDataToSave[key] === undefined || bookDataToSave[key] === '') {
-          delete bookDataToSave[key];
+        if (bookDataToSave[key as keyof typeof bookDataToSave] === undefined || bookDataToSave[key as keyof typeof bookDataToSave] === '') {
+          delete bookDataToSave[key as keyof typeof bookDataToSave];
         }
       });
       
