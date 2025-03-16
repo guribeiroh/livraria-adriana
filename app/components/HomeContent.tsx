@@ -40,17 +40,11 @@ export default function HomeContent() {
               </div>
             ))
           ) : featuredBooks.length > 0 ? (
-            featuredBooks.map(book => (
+            featuredBooks.map((book, index) => (
               <BookCard
                 key={book.id}
-                id={book.id}
-                title={book.title}
-                author={book.author}
-                price={book.price}
-                originalPrice={book.original_price || undefined}
-                coverImage={book.cover_image || '/images/book-placeholder.jpg'}
-                slug={book.slug}
-                category={book.category?.name || 'Sem categoria'}
+                book={book}
+                index={index}
               />
             ))
           ) : (
@@ -88,17 +82,11 @@ export default function HomeContent() {
               </div>
             ))
           ) : bestsellerBooks.length > 0 ? (
-            bestsellerBooks.map(book => (
+            bestsellerBooks.map((book, index) => (
               <BookCard
                 key={book.id}
-                id={book.id}
-                title={book.title}
-                author={book.author}
-                price={book.price}
-                originalPrice={book.original_price || undefined}
-                coverImage={book.cover_image || '/images/book-placeholder.jpg'}
-                slug={book.slug}
-                category={book.category?.name || 'Sem categoria'}
+                book={book}
+                index={index}
               />
             ))
           ) : (
