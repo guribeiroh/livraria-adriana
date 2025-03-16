@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBooks, getFeaturedBooks, getBestsellerBooks } from '@/app/lib/database';
 
-export async function GET(request: Request) {
+export const runtime = 'edge';
+
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const featured = searchParams.get('featured');

@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBooksByCategory } from '@/app/lib/database';
+
+export const runtime = 'edge';
 
 interface Params {
   params: {
@@ -7,7 +9,7 @@ interface Params {
   };
 }
 
-export async function GET(request: Request, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { slug } = params;
     const { searchParams } = new URL(request.url);

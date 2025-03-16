@@ -5,63 +5,105 @@ import { createServerClient } from '@supabase/ssr';
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   
-  // Criar o cliente Supabase
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => req.cookies.get(name)?.value,
-        set: (name, value, options) => {
-          res.cookies.set({ name, value, ...options });
-        },
-        remove: (name, options) => {
-          res.cookies.set({ name, value: '', ...options });
-        },
-      },
+  try {
+    // Checar se as variáveis de ambiente estão disponíveis
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Middleware: Variáveis de ambiente do Supabase não encontradas');
+      return res;
     }
-  );
-  
-  // Verificar se o usuário está autenticado
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  // Lista de rotas que requerem autenticação
-  const protectedRoutes = [
-    '/perfil',
-    '/admin',
-    '/carrinho/checkout'
-  ];
-  
-  // Lista de rotas que requerem permissão de administrador
-  const adminRoutes = [
-    '/admin'
-  ];
-  
-  // Verificar se a rota atual está protegida
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
-  
-  // Verificar se a rota atual requer permissão de administrador
-  const isAdminRoute = adminRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
-  
-  // Se a rota for protegida e o usuário não estiver autenticado, redirecionar para login
-  if (isProtectedRoute && !session?.user) {
-    const url = new URL('/login', req.url);
-    url.searchParams.set('next', req.nextUrl.pathname);
-    return NextResponse.redirect(url);
-  }
-  
-  // Se a rota requerer permissão de administrador, verificar o perfil do usuário
-  if (isAdminRoute && session?.user) {
-    // Removida a verificação de papel de administrador
-    // Qualquer usuário autenticado pode acessar o painel admin
+
+    // Determinar o domínio para os cookies
+    const url = new URL(req.url);
+    const isLocalhost = url.hostname === 'localhost';
+    
+    // Criar o cliente Supabase
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get: (name) => req.cookies.get(name)?.value,
+          set: (name, value, options) => {
+            res.cookies.set({ 
+              name, 
+              value, 
+              ...options,
+              // Não definir domínio em localhost
+              ...(isLocalhost ? {} : { 
+                domain: url.hostname,
+                secure: true,
+                sameSite: 'lax' 
+              })
+            });
+          },
+          remove: (name, options) => {
+            res.cookies.set({ 
+              name, 
+              value: '', 
+              ...options,
+              // Não definir domínio em localhost
+              ...(isLocalhost ? {} : { 
+                domain: url.hostname,
+                secure: true,
+                sameSite: 'lax' 
+              })
+            });
+          },
+        },
+      }
+    );
+    
+    // Verificar se o usuário está autenticado
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Middleware: Erro ao obter sessão do usuário:', error.message);
+      return res;
+    }
+    
+    const session = data.session;
+    
+    // Lista de rotas que requerem autenticação
+    const protectedRoutes = [
+      '/perfil',
+      '/admin',
+      '/carrinho/checkout'
+    ];
+    
+    // Lista de rotas que requerem permissão de administrador
+    const adminRoutes = [
+      '/admin'
+    ];
+    
+    // Verificar se a rota atual está protegida
+    const isProtectedRoute = protectedRoutes.some(route => 
+      req.nextUrl.pathname.startsWith(route)
+    );
+    
+    // Verificar se a rota atual requer permissão de administrador
+    const isAdminRoute = adminRoutes.some(route => 
+      req.nextUrl.pathname.startsWith(route)
+    );
+    
+    // Se a rota for protegida e o usuário não estiver autenticado, redirecionar para login
+    if (isProtectedRoute && !session?.user) {
+      const url = new URL('/login', req.url);
+      url.searchParams.set('next', req.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+    
+    // Se a rota requerer permissão de administrador, verificar o perfil do usuário
+    if (isAdminRoute && session?.user) {
+      // Removida a verificação de papel de administrador
+      // Qualquer usuário autenticado pode acessar o painel admin
+      return res;
+    }
+
+    return res;
+  } catch (error) {
+    console.error('Middleware: Erro inesperado:', error);
     return res;
   }
-
-  return res;
 }
 
 // Configurar quais caminhos o middleware deve ser executado

@@ -4,11 +4,30 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL ou Anon Key ausente. Verifique suas variáveis de ambiente.');
+  console.error('Erro crítico: Supabase URL ou Anon Key ausente. Verifique suas variáveis de ambiente.');
+  if (typeof window !== 'undefined') {
+    console.error('Ambiente de cliente detectado. Verifique se as variáveis NEXT_PUBLIC_* estão configuradas corretamente.');
+  } else {
+    console.error('Ambiente de servidor detectado. Verifique as variáveis de ambiente na configuração de hospedagem.');
+  }
 }
 
+// Opções para o cliente Supabase
+const supabaseOptions = {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+};
+
 // Criar o cliente Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, supabaseOptions);
+
+// Para debugging em desenvolvimento
+if (process.env.NODE_ENV === 'development') {
+  console.log('Inicializando Supabase client com URL:', supabaseUrl);
+}
 
 // Função para pegar o usuário atual
 export async function getCurrentUser() {

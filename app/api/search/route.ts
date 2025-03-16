@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { searchBooks } from '@/app/lib/database';
 
-export async function GET(request: Request) {
+export const runtime = 'edge';
+
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error(`Erro na busca por "${request.url}":`, error);
+    console.error(`Erro na busca:`, error);
     return NextResponse.json(
       { success: false, error: 'Erro ao realizar a busca' },
       { status: 500 }
