@@ -85,8 +85,8 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
         item => item.livro.id === livro.id
       );
 
-      let novosItens;
-      let itemAtualizado;
+      let novosItens: ItemCarrinho[];
+      let itemAtualizado: ItemCarrinho;
 
       if (itemExistente) {
         // Se o item já existe, incrementa a quantidade
