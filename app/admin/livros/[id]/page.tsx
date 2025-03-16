@@ -155,10 +155,6 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.category_id = 'A categoria é obrigatória';
     }
     
-    if (!formData.stock || formData.stock < 0) {
-      newErrors.stock = 'O estoque não pode ser negativo';
-    }
-    
     if (!formData.isbn?.trim()) {
       newErrors.isbn = 'O ISBN é obrigatório';
     }
