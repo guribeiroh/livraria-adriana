@@ -1,0 +1,199 @@
+warning: in the working copy of 'app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app/busca/page.tsx b/app/busca/page.tsx[m
+[1mdeleted file mode 100644[m
+[1mindex 2d729db..0000000[m
+[1m--- a/app/busca/page.tsx[m
+[1m+++ /dev/null[m
+[36m@@ -1,73 +0,0 @@[m
+[31m-'use client';[m
+[31m-[m
+[31m-import { useEffect, useState } from 'react';[m
+[31m-import { useSearchParams } from 'next/navigation';[m
+[31m-import { livros } from '../data/livros';[m
+[31m-import { Livro } from '../types';[m
+[31m-import LivroCard from '../components/LivroCard';[m
+[31m-import SearchBar from '../components/SearchBar';[m
+[31m-[m
+[31m-export default function BuscaPage() {[m
+[31m-  const searchParams = useSearchParams();[m
+[31m-  const query = searchParams.get('q') || '';[m
+[31m-  const [resultados, setResultados] = useState<Livro[]>([]);[m
+[31m-[m
+[31m-  useEffect(() => {[m
+[31m-    if (query) {[m
+[31m-      const termosDeBusca = query.toLowerCase().split(' ');[m
+[31m-      [m
+[31m-      const resultadosFiltrados = livros.filter(livro => {[m
+[31m-        const titulo = livro.titulo.toLowerCase();[m
+[31m-        const autor = livro.autor.toLowerCase();[m
+[31m-        const descricao = livro.descricao.toLowerCase();[m
+[31m-        const categoria = livro.categoria.toLowerCase();[m
+[31m-        [m
+[31m-        return termosDeBusca.some(termo => [m
+[31m-          titulo.includes(termo) || [m
+[31m-          autor.includes(termo) || [m
+[31m-          descricao.includes(termo) || [m
+[31m-          categoria.includes(termo)[m
+[31m-        );[m
+[31m-      });[m
+[31m-      [m
+[31m-      setResultados(resultadosFiltrados);[m
+[31m-    } else {[m
+[31m-      setResultados([]);[m
+[31m-    }[m
+[31m-  }, [query]);[m
+[31m-[m
+[31m-  return ([m
+[31m-    <div className="container mx-auto px-4 py-8">[m
+[31m-      <h1 className="text-3xl font-bold mb-6">Resultados da Busca</h1>[m
+[31m-      [m
+[31m-      <div className="mb-8">[m
+[31m-        <SearchBar />[m
+[31m-      </div>[m
+[31m-      [m
+[31m-      {query ? ([m
+[31m-        <>[m
+[31m-          <p className="mb-4 text-gray-600">[m
+[31m-            {resultados.length === 0 [m
+[31m-              ? 'Nenhum resultado encontrado para ' [m
+[31m-              : `${resultados.length} resultado(s) encontrado(s) para `}[m
+[31m-            <span className="font-semibold">"{query}"</span>[m
+[31m-          </p>[m
+[31m-          [m
+[31m-          {resultados.length > 0 && ([m
+[31m-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">[m
+[31m-              {resultados.map(livro => ([m
+[31m-                <LivroCard key={livro.id} livro={livro} />[m
+[31m-              ))}[m
+[31m-            </div>[m
+[31m-          )}[m
+[31m-        </>[m
+[31m-      ) : ([m
+[31m-        <div className="text-center py-12">[m
+[31m-          <p className="text-xl text-gray-500">[m
+[31m-            Digite algo na barra de busca para encontrar livros[m
+[31m-          </p>[m
+[31m-        </div>[m
+[31m-      )}[m
+[31m-    </div>[m
+[31m-  );[m
+[31m-} [m
+\ No newline at end of file[m
+[1mdiff --git a/app/components/SearchBar.tsx b/app/components/SearchBar.tsx[m
+[1mdeleted file mode 100644[m
+[1mindex a282e9b..0000000[m
+[1m--- a/app/components/SearchBar.tsx[m
+[1m+++ /dev/null[m
+[36m@@ -1,69 +0,0 @@[m
+[31m-'use client';[m
+[31m-[m
+[31m-import { useState } from 'react';[m
+[31m-import { useRouter } from 'next/navigation';[m
+[31m-[m
+[31m-export default function SearchBar() {[m
+[31m-  const [query, setQuery] = useState('');[m
+[31m-  const router = useRouter();[m
+[31m-[m
+[31m-  const handleSearch = (e: React.FormEvent) => {[m
+[31m-    e.preventDefault();[m
+[31m-    if (query.trim()) {[m
+[31m-      router.push(`/busca?q=${encodeURIComponent(query.trim())}`);[m
+[31m-    }[m
+[31m-  };[m
+[31m-[m
+[31m-  return ([m
+[31m-    <div className="w-full max-w-lg mx-auto">[m
+[31m-      <form onSubmit={handleSearch} className="flex items-center">[m
+[31m-        <div className="relative w-full">[m
+[31m-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">[m
+[31m-            <svg [m
+[31m-              className="w-4 h-4 text-gray-500" [m
+[31m-              fill="none" [m
+[31m-              stroke="currentColor" [m
+[31m-              viewBox="0 0 24 24" [m
+[31m-              xmlns="http://www.w3.org/2000/svg"[m
+[31m-            >[m
+[31m-              <path [m
+[31m-                strokeLinecap="round" [m
+[31m-                strokeLinejoin="round" [m
+[31m-                strokeWidth="2" [m
+[31m-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" [m
+[31m-              />[m
+[31m-            </svg>[m
+[31m-          </div>[m
+[31m-          <input[m
+[31m-            type="text"[m
+[31m-            value={query}[m
+[31m-            onChange={(e) => setQuery(e.target.value)}[m
+[31m-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"[m
+[31m-            placeholder="Buscar livros, autores, categorias..."[m
+[31m-            required[m
+[31m-          />[m
+[31m-        </div>[m
+[31m-        <button[m
+[31m-          type="submit"[m
+[31m-          className="p-2.5 ml-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300"[m
+[31m-        >[m
+[31m-          <svg [m
+[31m-            className="w-5 h-5" [m
+[31m-            fill="none" [m
+[31m-            stroke="currentColor" [m
+[31m-            viewBox="0 0 24 24" [m
+[31m-            xmlns="http://www.w3.org/2000/svg"[m
+[31m-          >[m
+[31m-            <path [m
+[31m-              strokeLinecap="round" [m
+[31m-              strokeLinejoin="round" [m
+[31m-              strokeWidth="2" [m
+[31m-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" [m
+[31m-            />[m
+[31m-          </svg>[m
+[31m-          <span className="sr-only">Buscar</span>[m
+[31m-        </button>[m
+[31m-      </form>[m
+[31m-    </div>[m
+[31m-  );[m
+[31m-} [m
+\ No newline at end of file[m
+[1mdiff --git a/app/page.tsx b/app/page.tsx[m
+[1mindex 4aefa93..b08804e 100644[m
+[1m--- a/app/page.tsx[m
+[1m+++ b/app/page.tsx[m
+[36m@@ -5,60 +5,107 @@[m [mimport Image from 'next/image';[m
+ import { livros } from './data/livros';[m
+ import { Livro } from './types';[m
+ import { useCarrinho } from './context/CarrinhoContext';[m
+[31m-import LivroCard from './components/LivroCard';[m
+[31m-import SearchBar from './components/SearchBar';[m
+ [m
+[31m-export default function Home() {[m
+[32m+[m[32mexport default function ProdutoPage({ params }: { params: { id: string } }) {[m
+[32m+[m[32m  const [livro, setLivro] = useState<Livro | null>(null);[m
+[32m+[m[32m  const [quantidade, setQuantidade] = useState(1);[m
+[32m+[m[32m  const { adicionarItem } = useCarrinho();[m
+[32m+[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    const livroEncontrado = livros.find(l => l.id === params.id);[m
+[32m+[m[32m    if (livroEncontrado) {[m
+[32m+[m[32m      setLivro(livroEncontrado);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }, [params.id]);[m
+[32m+[m
+[32m+[m[32m  if (!livro) {[m
+[32m+[m[32m    return ([m
+[32m+[m[32m      <div className="container mx-auto px-4 py-12 text-center">[m
+[32m+[m[32m        <h2 className="text-2xl font-bold mb-4">Produto não encontrado</h2>[m
+[32m+[m[32m        <p>O livro que você está procurando não foi encontrado em nosso catálogo.</p>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    );[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const handleAdicionarAoCarrinho = () => {[m
+[32m+[m[32m    for (let i = 0; i < quantidade; i++) {[m
+[32m+[m[32m      adicionarItem(livro);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  };[m
+[32m+[m
+   return ([m
+[31m-    <div className="container mx-auto px-4 py-8">[m
+[31m-      <section cla
