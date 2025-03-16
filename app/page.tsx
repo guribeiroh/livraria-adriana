@@ -1,111 +1,89 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { livros } from './data/livros';
-import { Livro } from './types';
-import { useCarrinho } from './context/CarrinhoContext';
+import LivroCard from './components/LivroCard';
 
-export default function ProdutoPage({ params }: { params: { id: string } }) {
-  const [livro, setLivro] = useState<Livro | null>(null);
-  const [quantidade, setQuantidade] = useState(1);
-  const { adicionarItem } = useCarrinho();
+export default function HomePage() {
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
 
-  useEffect(() => {
-    const livroEncontrado = livros.find(l => l.id === params.id);
-    if (livroEncontrado) {
-      setLivro(livroEncontrado);
-    }
-  }, [params.id]);
+  const categorias = Array.from(new Set(livros.map(livro => livro.categoria)));
 
-  if (!livro) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl font-bold mb-4">Produto não encontrado</h2>
-        <p>O livro que você está procurando não foi encontrado em nosso catálogo.</p>
-      </div>
-    );
-  }
-
-  const handleAdicionarAoCarrinho = () => {
-    for (let i = 0; i < quantidade; i++) {
-      adicionarItem(livro);
-    }
-  };
+  const livrosFiltrados = livros.filter(livro => {
+    // Filtro de categoria
+    const matchCategoria = !categoriaSelecionada || livro.categoria === categoriaSelecionada;
+    
+    // Filtro de busca
+    const matchBusca = livro.titulo.toLowerCase().includes(busca.toLowerCase()) || 
+                      livro.autor.toLowerCase().includes(busca.toLowerCase());
+    
+    return matchCategoria && matchBusca;
+  });
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-          {/* Imagem do livro */}
-          <div className="relative h-[400px] md:h-[500px] w-full">
-            <Image
-              src={livro.imagemUrl}
-              alt={livro.titulo}
-              fill
-              style={{ objectFit: 'cover' }}
-              className="rounded-lg"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
+    <main className="container mx-auto px-4 py-8">
+      {/* Banner principal */}
+      <div className="relative w-full h-[400px] mb-8 rounded-lg overflow-hidden">
+        <Image 
+          src="/images/banner.jpg" 
+          alt="Livraria Online"
+          fill
+          style={{ objectFit: 'cover' }}
+          priority
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 text-white p-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">Livraria Online</h1>
+          <p className="text-xl md:text-2xl text-center max-w-2xl">Descubra novos mundos através dos livros</p>
+          <div className="mt-6 w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar por título ou autor..."
+              className="w-full px-4 py-3 rounded-lg text-black"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
             />
-          </div>
-
-          {/* Detalhes do livro */}
-          <div className="flex flex-col">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">{livro.titulo}</h1>
-            <p className="text-xl text-gray-600 mb-4">por {livro.autor}</p>
-            
-            <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <span className="text-2xl font-bold text-blue-800">R${livro.preco.toFixed(2)}</span>
-              <p className="text-sm text-blue-600 mt-1">
-                {livro.disponivel ? 'Em estoque' : 'Indisponível'}
-              </p>
-            </div>
-
-            <p className="text-gray-700 mb-6">{livro.descricao}</p>
-
-            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-8">
-              <div>
-                <p><span className="font-semibold">Categoria:</span> {livro.categoria}</p>
-                <p><span className="font-semibold">Ano:</span> {livro.anoPublicacao}</p>
-              </div>
-              <div>
-                <p><span className="font-semibold">Páginas:</span> {livro.paginas}</p>
-                <p><span className="font-semibold">ISBN:</span> {livro.isbn}</p>
-              </div>
-            </div>
-
-            {livro.disponivel && (
-              <div className="mt-auto">
-                <div className="flex items-center mb-4">
-                  <label htmlFor="quantidade" className="mr-3 text-gray-700">Quantidade:</label>
-                  <div className="flex items-center border rounded">
-                    <button 
-                      className="px-3 py-1 border-r"
-                      onClick={() => setQuantidade(prev => Math.max(1, prev - 1))}
-                    >
-                      -
-                    </button>
-                    <span className="px-4 py-1">{quantidade}</span>
-                    <button 
-                      className="px-3 py-1 border-l"
-                      onClick={() => setQuantidade(prev => prev + 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={handleAdicionarAoCarrinho}
-                  className="w-full bg-blue-600 text-white py-3 rounded-md text-lg hover:bg-blue-700 transition"
-                >
-                  Adicionar ao Carrinho
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Filtro de categorias */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Categorias</h2>
+        <div className="flex flex-wrap gap-2">
+          <button 
+            className={`px-4 py-2 rounded-full border ${!categoriaSelecionada ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+            onClick={() => setCategoriaSelecionada(null)}
+          >
+            Todos
+          </button>
+          {categorias.map((categoria) => (
+            <button 
+              key={categoria}
+              className={`px-4 py-2 rounded-full border ${categoriaSelecionada === categoria ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
+              onClick={() => setCategoriaSelecionada(categoria)}
+            >
+              {categoria}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Lista de livros */}
+      <h2 className="text-2xl font-semibold mb-4">{categoriaSelecionada ? `Livros de ${categoriaSelecionada}` : 'Todos os Livros'}</h2>
+      
+      {livrosFiltrados.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+          {livrosFiltrados.map((livro) => (
+            <LivroCard key={livro.id} livro={livro} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-600">Nenhum livro encontrado.</p>
+        </div>
+      )}
+    </main>
   );
 } 
