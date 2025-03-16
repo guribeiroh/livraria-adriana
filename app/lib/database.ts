@@ -3,17 +3,22 @@ import { Book, Category, Review, Order, OrderItem, User, Wishlist, Coupon } from
 
 // Funções para obter dados
 export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
 
-  if (error) {
-    console.error('Erro ao buscar categorias:', error);
+    if (error) {
+      console.error('Erro ao buscar categorias:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Erro não tratado ao buscar categorias:', err);
     return [];
   }
-
-  return data || [];
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
@@ -352,64 +357,84 @@ export async function validateCoupon(code: string, totalValue: number): Promise<
 
 // Funções para o painel de administração
 export async function getAllBooks(limit: number = 100, offset: number = 0): Promise<Book[]> {
-  const { data, error } = await supabase
-    .from('books')
-    .select(`
-      *,
-      category:categories(id, name, slug)
-    `)
-    .order('title')
-    .range(offset, offset + limit - 1);
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        *,
+        category:categories(id, name, slug)
+      `)
+      .order('title')
+      .range(offset, offset + limit - 1);
 
-  if (error) {
-    console.error('Erro ao buscar todos os livros:', error);
+    if (error) {
+      console.error('Erro ao buscar todos os livros:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Erro não tratado ao buscar livros:', err);
     return [];
   }
-
-  return data || [];
 }
 
 export async function updateBook(id: string, updates: Partial<Book>): Promise<Book | null> {
-  const { data, error } = await supabase
-    .from('books')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-  if (error) {
-    console.error(`Erro ao atualizar livro ${id}:`, error);
+    if (error) {
+      console.error(`Erro ao atualizar livro ${id}:`, error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error(`Erro não tratado ao atualizar livro ${id}:`, err);
     return null;
   }
-
-  return data;
 }
 
 export async function createBook(book: Partial<Book>): Promise<Book | null> {
-  const { data, error } = await supabase
-    .from('books')
-    .insert(book)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .insert(book)
+      .select()
+      .single();
 
-  if (error) {
-    console.error('Erro ao criar livro:', error);
+    if (error) {
+      console.error('Erro ao criar livro:', error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro não tratado ao criar livro:', err);
     return null;
   }
-
-  return data;
 }
 
 export async function deleteBook(id: string): Promise<boolean> {
-  const { error } = await supabase
-    .from('books')
-    .delete()
-    .eq('id', id);
+  try {
+    const { error } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', id);
 
-  if (error) {
-    console.error(`Erro ao deletar livro ${id}:`, error);
+    if (error) {
+      console.error(`Erro ao deletar livro ${id}:`, error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error(`Erro não tratado ao deletar livro ${id}:`, err);
     return false;
   }
-
-  return true;
 } 
