@@ -98,12 +98,24 @@ export default function Navbar() {
               href="/contato" 
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 pathname === '/contato' 
-            <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">Livros</Link>
-            <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">Mais Vendidos</Link>
-            <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">Lançamentos</Link>
-            <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">Promoções</Link>
-            <Link href="/sobre" className="text-primary-700 font-medium hover:text-primary-800">Sobre</Link>
-            <Link href="/contato" className="text-primary-700 font-medium hover:text-primary-800">Contato</Link>
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Contato
+            </Link>
+            <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">
+              Livros
+            </Link>
+            <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">
+              Mais Vendidos
+            </Link>
+            <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">
+              Lançamentos
+            </Link>
+            <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">
+              Promoções
+            </Link>
           </div>
 
           {/* Área de usuário e carrinho - visível em desktop */}
