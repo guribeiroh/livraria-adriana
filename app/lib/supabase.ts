@@ -110,6 +110,7 @@ export interface Book {
   image_url: string | null;
   category_id: string | null;
   category_name?: string;
+  category?: Category;
   slug: string;
   pages?: number;
   isbn?: string;
