@@ -4,166 +4,223 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { livros } from '../../../data/livros';
-import { Livro } from '../../../types';
+import { Book, Category } from '../../../lib/supabase';
+import { getBookBySlug, getCategories, updateBook, createBook } from '../../../lib/database';
+import { slugify } from '../../../lib/utils';
 
 export default function EditarLivroPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const isNewBook = params.id === 'novo';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(!isNewBook);
   
   // Estado para categoria personalizada
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   
   // Lista de categorias existentes
-  const categorias = Array.from(new Set(livros.map(livro => livro.categoria)));
+  const [categorias, setCategorias] = useState<Category[]>([]);
   
   // Estado para mensagens de erro
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Estado do formulário
-  const [formData, setFormData] = useState<Partial<Livro>>({
+  const [formData, setFormData] = useState<Partial<Book>>({
     id: '',
-    titulo: '',
-    autor: '',
-    descricao: '',
-    preco: 0,
-    precoOriginal: undefined,
-    imagemUrl: '',
-    paginas: 0,
-    categoria: '',
+    title: '',
+    author: '',
+    description: '',
+    price: 0,
+    original_price: null,
+    cover_image: '',
+    pages: 0,
+    category_id: '',
     isbn: '',
-    anoPublicacao: new Date().getFullYear(),
-    disponivel: true
+    publication_year: new Date().getFullYear(),
+    is_active: true,
+    is_featured: false,
+    is_bestseller: false,
+    is_new: true,
+    stock: 0,
+    slug: ''
   });
 
-  // Carregar dados do livro se for edição
+  // Carregar dados do livro e categorias
   useEffect(() => {
-    if (!isNewBook) {
-      const livroEncontrado = livros.find(l => l.id === params.id);
-      if (livroEncontrado) {
-        setFormData(livroEncontrado);
-        setImagePreview(livroEncontrado.imagemUrl);
-      } else {
-        alert('Livro não encontrado!');
-        router.push('/admin/livros');
+    const fetchData = async () => {
+      try {
+        // Carregar categorias em todos os casos
+        const categoriasData = await getCategories();
+        setCategorias(categoriasData);
+        
+        // Se não for um novo livro, carregar dados do livro existente
+        if (!isNewBook) {
+          const livro = await getBookBySlug(params.id);
+          
+          if (livro) {
+            setFormData({
+              ...livro,
+              category_id: livro.category_id || ''
+            });
+            setImagePreview(livro.cover_image || null);
+          } else {
+            alert('Livro não encontrado!');
+            router.push('/admin/livros');
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        alert('Erro ao carregar dados. Por favor, tente novamente.');
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [params.id, isNewBook, router]);
+    };
+    
+    fetchData();
+  }, [isNewBook, params.id, router]);
 
-  // Simulação de upload de imagem
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Em uma aplicação real, você enviaria o arquivo para um servidor e obteria o URL
-      const tempUrl = URL.createObjectURL(file);
-      setImagePreview(tempUrl);
-      setFormData(prev => ({ ...prev, imagemUrl: tempUrl }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setFormData(prev => ({
+          ...prev,
+          cover_image: result
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Atualizar dados do formulário
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+    const { name, value, type } = e.target;
     
-    if (name === 'categoria' && value === 'other') {
-      setShowCustomCategory(true);
-      return;
+    // Limpar erro do campo quando o usuário editar
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-
+    
+    // Tratar diferentes tipos de campos
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
     } else if (type === 'number') {
-      setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? '' : Number(value)
+      }));
+    } else if (name === 'category_id' && value === 'custom') {
+      setShowCustomCategory(true);
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-    
-    // Limpar erro para o campo que acabou de ser modificado
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        // Gerar slug automaticamente a partir do título
+        ...(name === 'title' ? { slug: slugify(value) } : {})
+      }));
     }
   };
 
-  // Validar o formulário antes de submeter
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.titulo?.trim()) {
-      newErrors.titulo = 'O título é obrigatório';
+    // Validar campos obrigatórios
+    if (!formData.title?.trim()) {
+      newErrors.title = 'O título é obrigatório';
     }
     
-    if (!formData.autor?.trim()) {
-      newErrors.autor = 'O autor é obrigatório';
+    if (!formData.author?.trim()) {
+      newErrors.author = 'O autor é obrigatório';
     }
     
-    if (!formData.descricao?.trim()) {
-      newErrors.descricao = 'A descrição é obrigatória';
+    if (!formData.price || formData.price <= 0) {
+      newErrors.price = 'O preço deve ser maior que zero';
+    }
+    
+    if (!formData.description?.trim()) {
+      newErrors.description = 'A descrição é obrigatória';
+    }
+    
+    if (!formData.category_id) {
+      newErrors.category_id = 'A categoria é obrigatória';
+    }
+    
+    if (!formData.stock || formData.stock < 0) {
+      newErrors.stock = 'O estoque não pode ser negativo';
     }
     
     if (!formData.isbn?.trim()) {
       newErrors.isbn = 'O ISBN é obrigatório';
-    } else if (!/^[\d-]+$/.test(formData.isbn)) {
-      newErrors.isbn = 'Formato de ISBN inválido';
     }
     
-    if (!formData.imagemUrl) {
-      newErrors.imagemUrl = 'A imagem é obrigatória';
-    }
-    
-    if (!formData.categoria) {
-      newErrors.categoria = 'A categoria é obrigatória';
-    }
-    
-    if (formData.paginas === undefined || formData.paginas <= 0) {
-      newErrors.paginas = 'O número de páginas deve ser maior que zero';
-    }
-    
-    if (formData.preco === undefined || formData.preco <= 0) {
-      newErrors.preco = 'O preço deve ser maior que zero';
-    }
-    
-    if (formData.precoOriginal && formData.preco !== undefined && formData.precoOriginal <= formData.preco) {
-      newErrors.precoOriginal = 'O preço original deve ser maior que o preço atual';
+    if (!formData.cover_image) {
+      newErrors.cover_image = 'A imagem da capa é obrigatória';
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submeter o formulário
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
-    setIsSubmitting(true);
-    
-    // Simulação de API - em uma aplicação real, você enviaria os dados para o backend
-    setTimeout(() => {
+    try {
+      setIsSubmitting(true);
+      
+      // Preparar o objeto para salvar
+      const livroData = {
+        ...formData,
+        // Garantir que os campos numéricos estejam com valores corretos
+        price: Number(formData.price),
+        original_price: formData.original_price ? Number(formData.original_price) : null,
+        pages: formData.pages ? Number(formData.pages) : null,
+        publication_year: formData.publication_year ? Number(formData.publication_year) : null,
+        stock: Number(formData.stock),
+      };
+      
+      let resultado;
+      
       if (isNewBook) {
-        // Gerar ID fake para novo livro
-        const newId = Date.now().toString();
-        alert(`Livro ${formData.titulo} cadastrado com sucesso! ID: ${newId}`);
+        // Criar novo livro
+        resultado = await createBook(livroData);
       } else {
-        alert(`Livro ${formData.titulo} atualizado com sucesso!`);
+        // Atualizar livro existente
+        resultado = await updateBook(formData.id as string, livroData);
       }
       
+      if (resultado) {
+        alert(`Livro ${isNewBook ? 'adicionado' : 'atualizado'} com sucesso!`);
+        router.push('/admin/livros');
+      } else {
+        throw new Error('Falha ao salvar o livro.');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar livro:', error);
+      alert(`Erro ao ${isNewBook ? 'criar' : 'atualizar'} o livro. Por favor, tente novamente.`);
+    } finally {
       setIsSubmitting(false);
-      router.push('/admin/livros');
-    }, 1000);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-primary-800">
-          {isNewBook ? 'Adicionar Novo Livro' : `Editar Livro: ${formData.titulo}`}
+          {isNewBook ? 'Adicionar Novo Livro' : `Editar Livro: ${formData.title}`}
         </h2>
         <Link 
           href="/admin/livros" 
@@ -205,41 +262,41 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
           <div className="space-y-6">
             {/* Título */}
             <div>
-              <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                 Título *
               </label>
               <input
                 type="text"
-                id="titulo"
-                name="titulo"
-                value={formData.titulo}
+                id="title"
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
                 className={`block w-full border ${
-                  errors.titulo ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                  errors.title ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } rounded-md shadow-sm py-2 px-3`}
               />
-              {errors.titulo && (
-                <p className="mt-1 text-sm text-error-600">{errors.titulo}</p>
+              {errors.title && (
+                <p className="mt-1 text-sm text-error-600">{errors.title}</p>
               )}
             </div>
 
             {/* Autor */}
             <div>
-              <label htmlFor="autor" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
                 Autor *
               </label>
               <input
                 type="text"
-                id="autor"
-                name="autor"
-                value={formData.autor}
+                id="author"
+                name="author"
+                value={formData.author}
                 onChange={handleChange}
                 className={`block w-full border ${
-                  errors.autor ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                  errors.author ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } rounded-md shadow-sm py-2 px-3`}
               />
-              {errors.autor && (
-                <p className="mt-1 text-sm text-error-600">{errors.autor}</p>
+              {errors.author && (
+                <p className="mt-1 text-sm text-error-600">{errors.author}</p>
               )}
             </div>
 
@@ -266,42 +323,42 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
 
             {/* Categoria */}
             <div>
-              <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
                 Categoria *
               </label>
               {!showCustomCategory ? (
                 <select
-                  id="categoria"
-                  name="categoria"
-                  value={formData.categoria}
+                  id="category_id"
+                  name="category_id"
+                  value={formData.category_id}
                   onChange={handleChange}
                   className={`block w-full border ${
-                    errors.categoria ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                    errors.category_id ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                   } rounded-md shadow-sm py-2 px-3`}
                 >
                   <option value="">Selecione uma categoria</option>
                   {categorias.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
-                  <option value="other">Outra (personalizada)</option>
+                  <option value="custom">Outra (personalizada)</option>
                 </select>
               ) : (
                 <div className="flex space-x-2">
                   <input
                     type="text"
                     placeholder="Digite a nova categoria"
-                    name="categoria"
-                    value={formData.categoria}
+                    name="category_id"
+                    value={formData.category_id}
                     onChange={handleChange}
                     className={`flex-1 block w-full border ${
-                      errors.categoria ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                      errors.category_id ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                     } rounded-md shadow-sm py-2 px-3`}
                   />
                   <button
                     type="button"
                     onClick={() => {
                       setShowCustomCategory(false);
-                      setFormData(prev => ({ ...prev, categoria: '' }));
+                      setFormData(prev => ({ ...prev, category_id: '' }));
                     }}
                     className="text-sm text-gray-500 hover:text-gray-700 underline"
                   >
@@ -309,23 +366,23 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                   </button>
                 </div>
               )}
-              {errors.categoria && (
-                <p className="mt-1 text-sm text-error-600">{errors.categoria}</p>
+              {errors.category_id && (
+                <p className="mt-1 text-sm text-error-600">{errors.category_id}</p>
               )}
             </div>
 
             {/* Ano de Publicação */}
             <div>
-              <label htmlFor="anoPublicacao" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="publication_year" className="block text-sm font-medium text-gray-700 mb-1">
                 Ano de Publicação *
               </label>
               <input
                 type="number"
-                id="anoPublicacao"
-                name="anoPublicacao"
+                id="publication_year"
+                name="publication_year"
                 min="1800"
                 max={new Date().getFullYear()}
-                value={formData.anoPublicacao}
+                value={formData.publication_year}
                 onChange={handleChange}
                 className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 py-2 px-3"
               />
@@ -333,22 +390,22 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
 
             {/* Páginas */}
             <div>
-              <label htmlFor="paginas" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="pages" className="block text-sm font-medium text-gray-700 mb-1">
                 Número de Páginas *
               </label>
               <input
                 type="number"
-                id="paginas"
-                name="paginas"
+                id="pages"
+                name="pages"
                 min="1"
-                value={formData.paginas}
+                value={formData.pages}
                 onChange={handleChange}
                 className={`block w-full border ${
-                  errors.paginas ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                  errors.pages ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } rounded-md shadow-sm py-2 px-3`}
               />
-              {errors.paginas && (
-                <p className="mt-1 text-sm text-error-600">{errors.paginas}</p>
+              {errors.pages && (
+                <p className="mt-1 text-sm text-error-600">{errors.pages}</p>
               )}
             </div>
           </div>
@@ -357,7 +414,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
           <div className="space-y-6">
             {/* Preço */}
             <div>
-              <label htmlFor="preco" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                 Preço (R$) *
               </label>
               <div className="relative">
@@ -366,25 +423,25 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                 </div>
                 <input
                   type="number"
-                  id="preco"
-                  name="preco"
+                  id="price"
+                  name="price"
                   min="0"
                   step="0.01"
-                  value={formData.preco}
+                  value={formData.price}
                   onChange={handleChange}
                   className={`block w-full pl-10 pr-3 py-2 border ${
-                    errors.preco ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                    errors.price ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                   } rounded-md shadow-sm`}
                 />
               </div>
-              {errors.preco && (
-                <p className="mt-1 text-sm text-error-600">{errors.preco}</p>
+              {errors.price && (
+                <p className="mt-1 text-sm text-error-600">{errors.price}</p>
               )}
             </div>
 
             {/* Preço Original */}
             <div>
-              <label htmlFor="precoOriginal" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="original_price" className="block text-sm font-medium text-gray-700 mb-1">
                 Preço Original (R$)
                 <span className="text-gray-500 text-xs ml-1">(opcional)</span>
               </label>
@@ -394,19 +451,19 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                 </div>
                 <input
                   type="number"
-                  id="precoOriginal"
-                  name="precoOriginal"
+                  id="original_price"
+                  name="original_price"
                   min="0"
                   step="0.01"
-                  value={formData.precoOriginal || ''}
+                  value={formData.original_price || ''}
                   onChange={handleChange}
                   className={`block w-full pl-10 pr-3 py-2 border ${
-                    errors.precoOriginal ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                    errors.original_price ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                   } rounded-md shadow-sm`}
                 />
               </div>
-              {errors.precoOriginal && (
-                <p className="mt-1 text-sm text-error-600">{errors.precoOriginal}</p>
+              {errors.original_price && (
+                <p className="mt-1 text-sm text-error-600">{errors.original_price}</p>
               )}
             </div>
 
@@ -438,8 +495,8 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                   </label>
                   <input
                     type="file"
-                    id="imagemUrl"
-                    name="imagemUrl"
+                    id="cover_image"
+                    name="cover_image"
                     accept="image/*"
                     onChange={handleImageChange}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
@@ -447,8 +504,8 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                   <p className="mt-1 text-xs text-gray-500">
                     JPG, PNG ou GIF. Tamanho máximo 2MB.
                   </p>
-                  {errors.imagemUrl && (
-                    <p className="mt-1 text-sm text-error-600">{errors.imagemUrl}</p>
+                  {errors.cover_image && (
+                    <p className="mt-1 text-sm text-error-600">{errors.cover_image}</p>
                   )}
                 </div>
               </div>
@@ -459,13 +516,13 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  id="disponivel"
-                  name="disponivel"
-                  checked={formData.disponivel}
+                  id="is_active"
+                  name="is_active"
+                  checked={formData.is_active}
                   onChange={handleChange}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="disponivel" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
                   Disponível em estoque
                 </label>
               </div>
@@ -478,21 +535,21 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
 
         {/* Descrição - Full width */}
         <div className="px-6 py-4">
-          <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Descrição *
           </label>
           <textarea
-            id="descricao"
-            name="descricao"
+            id="description"
+            name="description"
             rows={6}
-            value={formData.descricao}
+            value={formData.description}
             onChange={handleChange}
             className={`block w-full border ${
-              errors.descricao ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+              errors.description ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
             } rounded-md shadow-sm py-2 px-3`}
           ></textarea>
-          {errors.descricao && (
-            <p className="mt-1 text-sm text-error-600">{errors.descricao}</p>
+          {errors.description && (
+            <p className="mt-1 text-sm text-error-600">{errors.description}</p>
           )}
         </div>
 

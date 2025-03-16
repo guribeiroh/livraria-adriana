@@ -3,52 +3,81 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { livros } from '../../data/livros';
-import { Livro } from '../../types';
+import { Book, Category } from '../../lib/supabase';
+import { getAllBooks, getCategories, deleteBook } from '../../lib/database';
 
 export default function AdminLivrosPage() {
-  const [livrosList, setLivrosList] = useState<Livro[]>([]);
+  const [livrosList, setLivrosList] = useState<Book[]>([]);
+  const [categorias, setCategorias] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const categorias = Array.from(new Set(livros.map(livro => livro.categoria)));
+  // Carregar livros e categorias
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [livrosData, categoriasData] = await Promise.all([
+          getAllBooks(),
+          getCategories()
+        ]);
+        
+        setLivrosList(livrosData);
+        setCategorias(categoriasData);
+        setError(null);
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        setError('Falha ao carregar os dados. Por favor, tente novamente.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   // Filtrar livros com base na pesquisa e categoria
-  useEffect(() => {
-    let filtered = [...livros];
+  const filteredBooks = livrosList.filter(livro => {
+    const matchesSearch = searchTerm === '' || 
+      livro.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      livro.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (livro.isbn && livro.isbn.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    if (searchTerm) {
-      filtered = filtered.filter(livro => 
-        livro.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.autor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.isbn.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    const matchesCategory = categoriaSelecionada === '' || 
+      livro.category_id === categoriaSelecionada;
     
-    if (categoriaSelecionada) {
-      filtered = filtered.filter(livro => livro.categoria === categoriaSelecionada);
-    }
-    
-    setLivrosList(filtered);
-    setCurrentPage(1); // Reset para a primeira página ao filtrar
-  }, [searchTerm, categoriaSelecionada]);
+    return matchesSearch && matchesCategory;
+  });
 
   // Calcular paginação
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = livrosList.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(livrosList.length / itemsPerPage);
+  const currentItems = filteredBooks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
 
   // Função para mudar de página
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Função simulada para excluir livro (em um app real, faria uma chamada API)
-  const handleDelete = (id: string) => {
+  // Função para excluir livro
+  const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este livro?')) {
-      setLivrosList(prev => prev.filter(livro => livro.id !== id));
-      alert('Livro excluído com sucesso!');
+      try {
+        const success = await deleteBook(id);
+        
+        if (success) {
+          setLivrosList(prev => prev.filter(livro => livro.id !== id));
+          alert('Livro excluído com sucesso!');
+        } else {
+          alert('Erro ao excluir o livro. Tente novamente.');
+        }
+      } catch (err) {
+        console.error('Erro ao excluir livro:', err);
+        alert('Erro ao excluir o livro. Tente novamente.');
+      }
     }
   };
 
@@ -98,9 +127,9 @@ export default function AdminLivrosPage() {
               onChange={(e) => setCategoriaSelecionada(e.target.value)}
             >
               <option value="">Todas as categorias</option>
-              {categorias.map((categoria) => (
-                <option key={categoria} value={categoria}>
-                  {categoria}
+              {categorias.map(categoria => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.name}
                 </option>
               ))}
             </select>
@@ -108,161 +137,203 @@ export default function AdminLivrosPage() {
         </div>
       </div>
 
-      {/* Tabela de Livros */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Livro
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Autor
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Categoria
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Preço
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentItems.length > 0 ? (
-                currentItems.map((livro) => (
-                  <tr key={livro.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 relative">
-                          <Image
-                            src={livro.imagemUrl}
-                            alt={livro.titulo}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            className="rounded"
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 line-clamp-1">{livro.titulo}</div>
-                          <div className="text-sm text-gray-500">ISBN: {livro.isbn}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{livro.autor}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
-                        {livro.categoria}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      R${livro.preco.toFixed(2)}
-                      {livro.precoOriginal && livro.precoOriginal > livro.preco && (
-                        <span className="line-through text-gray-400 ml-1">
-                          R${livro.precoOriginal.toFixed(2)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        livro.disponivel 
-                          ? 'bg-success-100 text-success-800' 
-                          : 'bg-error-100 text-error-800'
-                      }`}>
-                        {livro.disponivel ? 'Em estoque' : 'Indisponível'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <Link 
-                        href={`/admin/livros/${livro.id}`} 
-                        className="text-primary-600 hover:text-primary-900"
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(livro.id)}
-                        className="text-error-600 hover:text-error-900"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    Nenhum livro encontrado com os filtros atuais.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {/* Estado de carregamento */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
+      )}
 
-        {/* Paginação */}
-        {livrosList.length > 0 && (
-          <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
-            <div className="text-sm text-gray-700">
-              Mostrando <span className="font-medium">{indexOfFirstItem + 1}</span> a{' '}
-              <span className="font-medium">{Math.min(indexOfLastItem, livrosList.length)}</span> de{' '}
-              <span className="font-medium">{livrosList.length}</span> resultados
+      {/* Mensagem de erro */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Tabela de Livros */}
+      {!isLoading && !error && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {currentItems.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              {searchTerm || categoriaSelecionada ? 
+                'Nenhum livro encontrado com os filtros aplicados.' : 
+                'Não há livros cadastrados.'}
             </div>
-            <nav className="flex items-center">
-              <button
-                onClick={() => paginate(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === 1
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <span className="sr-only">Anterior</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-              <div className="hidden md:flex">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                  <button
-                    key={number}
-                    onClick={() => paginate(number)}
-                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-                      currentPage === number
-                        ? 'text-primary-600 bg-primary-50 border-primary-500 z-10'
-                        : 'text-gray-500 hover:bg-gray-50'
-                    }`}
-                  >
-                    {number}
-                  </button>
-                ))}
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Livro
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ISBN
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Preço
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estoque
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentItems.map((livro) => (
+                    <tr key={livro.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-12 w-10 flex-shrink-0 mr-4 relative overflow-hidden rounded">
+                            <Image
+                              src={livro.cover_image || '/images/book-placeholder.jpg'}
+                              alt={livro.title}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 line-clamp-1">{livro.title}</div>
+                            <div className="text-sm text-gray-500">{livro.author}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {livro.isbn || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(livro.price)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {livro.stock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          livro.is_active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {livro.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <Link
+                            href={`/admin/livros/${livro.id}`}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Editar
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(livro.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Paginação */}
+          {filteredBooks.length > itemsPerPage && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Próxima
+                </button>
               </div>
-              <button
-                onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                  currentPage === totalPages
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <span className="sr-only">Próximo</span>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </nav>
-          </div>
-        )}
-      </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Mostrando <span className="font-medium">{indexOfFirstItem + 1}</span> a{' '}
+                    <span className="font-medium">
+                      {indexOfLastItem > filteredBooks.length ? filteredBooks.length : indexOfLastItem}
+                    </span>{' '}
+                    de <span className="font-medium">{filteredBooks.length}</span> resultados
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">Anterior</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    {/* Números das páginas */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => paginate(num)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === num
+                            ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="sr-only">Próxima</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 } 
