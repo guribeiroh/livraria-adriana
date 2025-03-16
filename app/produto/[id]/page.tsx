@@ -84,7 +84,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
       autor: book.author,
       descricao: book.description || '',
       preco: book.price,
-      precoOriginal: book.original_price,
+      precoOriginal: book.original_price || undefined,
       imagemUrl: book.cover_image || '',
       paginas: book.pages || 0,
       categoria: book.category?.name || '',
