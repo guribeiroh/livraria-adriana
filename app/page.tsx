@@ -1,5 +1,12 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { livros } from './data/livros';
+import { Livro } from './types';
+import { useCarrinho } from './context/CarrinhoContext';
 import LivroCard from './components/LivroCard';
+import SearchBar from './components/SearchBar';
 
 export default function Home() {
   return (
@@ -12,9 +19,9 @@ export default function Home() {
           <p className="text-lg text-blue-700 mb-6">
             Descubra novos mundos através dos nossos livros selecionados.
           </p>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-md text-lg hover:bg-blue-700 transition">
-            Explorar Catálogo
-          </button>
+          <div className="mt-8">
+            <SearchBar />
+          </div>
         </div>
       </section>
 
@@ -54,4 +61,4 @@ export default function Home() {
       </section>
     </div>
   );
-}
+} 
