@@ -388,8 +388,38 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
   try {
     console.log(`Atualizando livro ${id} com dados:`, updates);
     
-    // Remover propriedades que não existem na tabela do banco
+    // Remover propriedades que não existem na tabela do banco ou possam causar problemas
     const { category, ...bookData } = updates as any;
+    
+    // Limitar o tamanho da imagem se for muito grande
+    if (bookData.cover_image && bookData.cover_image.length > 300000) {
+      console.log('Imagem de capa muito grande, usando imagem padrão');
+      bookData.cover_image = null;
+    }
+    
+    // Garantir que campos numéricos sejam números
+    if (bookData.price) bookData.price = Number(bookData.price);
+    if (bookData.original_price) bookData.original_price = Number(bookData.original_price);
+    if (bookData.pages) bookData.pages = Number(bookData.pages);
+    if (bookData.publication_year) bookData.publication_year = Number(bookData.publication_year);
+    if (bookData.stock) bookData.stock = Number(bookData.stock);
+    
+    // Garantir que o slug seja válido e único
+    if (bookData.title && (!bookData.slug || bookData.slug.trim() === '')) {
+      const { data: slugCheck } = await supabase
+        .from('books')
+        .select('id')
+        .eq('slug', bookData.slug)
+        .neq('id', id)
+        .single();
+      
+      if (slugCheck) {
+        console.log('Slug já existe, adicionando sufixo');
+        bookData.slug = `${bookData.slug}-${Date.now().toString().slice(-4)}`;
+      }
+    }
+    
+    console.log('Dados finais para atualização:', bookData);
     
     const { data, error } = await supabase
       .from('books')
@@ -400,6 +430,7 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
 
     if (error) {
       console.error(`Erro ao atualizar livro ${id}:`, error);
+      console.error(`Detalhes do erro:`, JSON.stringify(error));
       return null;
     }
 
@@ -416,6 +447,19 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
     
     // Remover propriedades que não existem na tabela do banco
     const { category, ...bookData } = book as any;
+    
+    // Limitar o tamanho da imagem se for muito grande
+    if (bookData.cover_image && bookData.cover_image.length > 300000) {
+      console.log('Imagem de capa muito grande, usando imagem padrão');
+      bookData.cover_image = null;
+    }
+    
+    // Garantir que campos numéricos sejam números
+    if (bookData.price) bookData.price = Number(bookData.price);
+    if (bookData.original_price) bookData.original_price = Number(bookData.original_price);
+    if (bookData.pages) bookData.pages = Number(bookData.pages);
+    if (bookData.publication_year) bookData.publication_year = Number(bookData.publication_year);
+    if (bookData.stock) bookData.stock = Number(bookData.stock);
     
     const { data, error } = await supabase
       .from('books')
