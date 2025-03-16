@@ -386,9 +386,14 @@ export async function getAllBooks(limit: number = 100, offset: number = 0): Prom
 
 export async function updateBook(id: string, updates: Partial<Book>): Promise<Book | null> {
   try {
+    console.log(`Atualizando livro ${id} com dados:`, updates);
+    
+    // Remover propriedades que não existem na tabela do banco
+    const { category, ...bookData } = updates as any;
+    
     const { data, error } = await supabase
       .from('books')
-      .update(updates)
+      .update(bookData)
       .eq('id', id)
       .select()
       .single();
@@ -407,9 +412,14 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
 
 export async function createBook(book: Partial<Book>): Promise<Book | null> {
   try {
+    console.log('Criando novo livro com dados:', book);
+    
+    // Remover propriedades que não existem na tabela do banco
+    const { category, ...bookData } = book as any;
+    
     const { data, error } = await supabase
       .from('books')
-      .insert(book)
+      .insert(bookData)
       .select()
       .single();
 

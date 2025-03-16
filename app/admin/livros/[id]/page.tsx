@@ -185,8 +185,12 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
         original_price: formData.original_price ? Number(formData.original_price) : null,
         pages: formData.pages ? Number(formData.pages) : null,
         publication_year: formData.publication_year ? Number(formData.publication_year) : null,
-        stock: Number(formData.stock),
+        stock: Number(formData.stock || 0),
+        // Garantir que o slug seja válido
+        slug: formData.slug || slugify(formData.title || ''),
       };
+      
+      console.log('Dados do livro a serem salvos:', livroData);
       
       let resultado;
       
