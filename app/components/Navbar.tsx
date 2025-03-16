@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCarrinho } from '../context/CarrinhoContext';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Navbar() {
   const { carrinho } = useCarrinho();
@@ -11,8 +11,24 @@ export default function Navbar() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [carrinhoAberto, setCarrinhoAberto] = useState(false);
   const [perfilAberto, setPerfilAberto] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const totalItens = carrinho.itens.reduce((total, item) => total + item.quantidade, 0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -20,17 +36,34 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-primary-50 shadow-md py-4 px-6 fixed top-0 w-full z-10">
+    <nav className={`py-4 px-6 fixed top-0 w-full z-10 transition-all duration-300 ${
+      scrolled ? "bg-white shadow-md" : "bg-primary-50"
+    }`}>
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-primary-700 hover:text-primary-800 transition-colors">
+        <Link href="/" className="heading-serif text-2xl text-primary-700 hover:text-primary-800 transition-colors">
           Livraria JessyKaroline
         </Link>
 
         {/* Menu para dispositivos móveis */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-4">
+          <button 
+            onClick={() => setCarrinhoAberto(!carrinhoAberto)}
+            className="text-primary-700 focus:outline-none relative"
+            aria-label={carrinhoAberto ? "Fechar carrinho" : "Abrir carrinho"}
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {totalItens > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {totalItens}
+              </span>
+            )}
+          </button>
+
           <button 
             onClick={() => setMenuAberto(!menuAberto)}
-            className="text-gray-600 focus:outline-none"
+            className="text-primary-700 focus:outline-none"
             aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,10 +78,10 @@ export default function Navbar() {
 
         {/* Menu principal - visível em desktop */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link href="/busca" className="text-primary-700 hover:text-primary-800">Livros</Link>
-          <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 hover:text-primary-800">Mais Vendidos</Link>
-          <Link href="/busca?categoria=lancamentos" className="text-primary-700 hover:text-primary-800">Lançamentos</Link>
-          <Link href="/busca?categoria=promocoes" className="text-primary-700 hover:text-primary-800">Promoções</Link>
+          <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">Livros</Link>
+          <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">Mais Vendidos</Link>
+          <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">Lançamentos</Link>
+          <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">Promoções</Link>
         </div>
 
         {/* Área de usuário e carrinho - visível em desktop */}

@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 57, 34, 20;
-  --background-start-rgb: 245, 243, 240;
-  --background-end-rgb: 245, 243, 240;
+  --foreground-rgb: 67, 47, 26;
+  --background-start-rgb: 247, 245, 242;
+  --background-end-rgb: 247, 245, 242;
 }
 
 body {
@@ -16,7 +16,6 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
-  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -30,10 +29,49 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #a0784c;
 }
 
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: light;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 py-2 px-4;
+  }
+  
+  .btn-secondary {
+    @apply bg-accent-400 text-primary-800 hover:bg-accent-500 active:bg-accent-300 py-2 px-4;
+  }
+  
+  .btn-outline {
+    @apply border border-primary-600 text-primary-600 hover:bg-primary-50 active:bg-primary-100 py-2 px-4;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-soft transition-shadow duration-300 hover:shadow-hover overflow-hidden;
+  }
+  
+  .card-body {
+    @apply p-5;
+  }
+  
+  .input {
+    @apply px-3 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all duration-200;
+  }
+  
+  .heading-serif {
+    @apply font-serif font-bold;
   }
 }
