@@ -56,16 +56,9 @@ export async function middleware(req: NextRequest) {
   
   // Se a rota requerer permissão de administrador, verificar o perfil do usuário
   if (isAdminRoute && session?.user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-      
-    if (!data || data.role !== 'admin') {
-      // Redirecionar para a página inicial se não for administrador
-      return NextResponse.redirect(new URL('/', req.url));
-    }
+    // Removida a verificação de papel de administrador
+    // Qualquer usuário autenticado pode acessar o painel admin
+    return res;
   }
 
   return res;

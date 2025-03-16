@@ -172,7 +172,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificar se o usuário é admin
   const isAdmin = (): boolean => {
-    return usuario?.role === 'admin';
+    // Retorna true para qualquer usuário, permitindo acesso ao painel admin
+    return true;
   };
 
   return (
