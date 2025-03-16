@@ -15,33 +15,40 @@ interface StatCardProps {
   bgColor?: string;
 }
 
-const StatCard = ({ title, value, icon, change, bgColor = 'bg-white' }: StatCardProps) => (
-  <div className={`${bgColor} rounded-lg shadow-md p-6 flex flex-col`}>
-    <div className="flex justify-between items-start">
-      <div>
-        <p className="text-gray-500 text-sm font-medium">{title}</p>
-        <h3 className="text-3xl font-bold mt-2 text-primary-800">{value}</h3>
-        {change && (
-          <p className={`text-sm mt-2 ${change.positive ? 'text-success-600' : 'text-error-600'} flex items-center`}>
-            {change.positive ? (
-              <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            )}
-            {change.value}
-          </p>
-        )}
-      </div>
-      <div className="p-3 rounded-full bg-primary-50 text-primary-500">
-        {icon}
+const StatCard = ({ title, value, icon, change, bgColor = 'bg-white' }: StatCardProps) => {
+  // Formatar valor como moeda se for título "Total de Vendas"
+  const displayValue = title === "Total de Vendas" 
+    ? `R$${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+    : value;
+    
+  return (
+    <div className={`${bgColor} rounded-lg shadow-md p-6 flex flex-col`}>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-gray-500 text-sm font-medium">{title}</p>
+          <h3 className="text-3xl font-bold mt-2 text-primary-800">{displayValue}</h3>
+          {change && (
+            <p className={`text-sm mt-2 ${change.positive ? 'text-success-600' : 'text-error-600'} flex items-center`}>
+              {change.positive ? (
+                <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              )}
+              {change.value}
+            </p>
+          )}
+        </div>
+        <div className="p-3 rounded-full bg-primary-50 text-primary-500">
+          {icon}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Componente de Tabela Recente
 interface RecentTableProps {
@@ -111,7 +118,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     // Dados simulados - em um app real, estes dados viriam de uma API
     setStats({
-      vendas: { total: 'R$24.532,00', change: '12%' },
+      vendas: { total: 24532, change: '12%' },
       pedidos: { total: 152, change: '8%' },
       usuarios: { total: 320, change: '5%' },
       livros: { total: 84, change: '-2%' }
