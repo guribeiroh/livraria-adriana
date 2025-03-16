@@ -191,6 +191,26 @@ export async function getBookReviews(bookId: string): Promise<Review[]> {
   return data || [];
 }
 
+export async function getNewBooks(limit: number = 8): Promise<Book[]> {
+  const { data, error } = await supabase
+    .from('books')
+    .select(`
+      *,
+      category:categories(id, name, slug)
+    `)
+    .eq('is_new', true)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Erro ao buscar lançamentos de livros:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 // Funções para gerenciar usuários
 export async function getUserById(userId: string): Promise<User | null> {
   const { data, error } = await supabase

@@ -1,113 +1,150 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { Book } from '../lib/supabase';
 import { useCarrinho } from '../context/CarrinhoContext';
-import { formatCurrency, calculateDiscount } from '../lib/utils';
+import Badge from './Badge';
+import Button from './Button';
 
 interface BookCardProps {
-  id: string;
-  title: string;
-  author: string;
-  price: number;
-  originalPrice?: number;
-  coverImage: string;
-  slug: string;
-  category: string;
+  book: Book;
+  index?: number;
 }
 
-export default function BookCard({
-  id,
-  title,
-  author,
-  price,
-  originalPrice,
-  coverImage,
-  slug,
-  category
-}: BookCardProps) {
+export default function BookCard({ book, index = 0 }: BookCardProps) {
   const { adicionarItem } = useCarrinho();
+  const [isHovered, setIsHovered] = useState(false);
+  const [botaoAnimado, setBotaoAnimado] = useState(false);
   
-  const discount = originalPrice ? calculateDiscount(originalPrice, price) : 0;
+  // Atraso de animação baseado no índice
+  const animationDelay = `${index * 100}ms`;
   
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Evita navegação
-    adicionarItem({
-      id,
-      titulo: title,
-      autor: author,
-      preco: price,
-      descricao: '', // Adicionando campos obrigatórios que faltavam
-      imagemUrl: coverImage,
-      paginas: 0,
-      categoria: category,
-      isbn: '',
-      anoPublicacao: 0,
-      disponivel: true
-    });
+  // Adaptar o livro para o formato esperado pelo carrinho
+  const handleAdicionarAoCarrinho = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    
+    // Converter Book para o formato que o carrinho espera
+    const livroAdaptado = {
+      id: book.id,
+      titulo: book.title,
+      autor: book.author,
+      preco: book.price,
+      precoOriginal: book.original_price || undefined,
+      imagemUrl: book.cover_image || '',
+      disponivel: book.stock && book.stock > 0 ? true : false,
+      categoria: book.category?.name || '',
+      paginas: book.pages || 0,
+      slug: book.slug
+    };
+    
+    adicionarItem(livroAdaptado);
+    
+    // Ativar animação do botão
+    setBotaoAnimado(true);
+    setTimeout(() => {
+      setBotaoAnimado(false);
+    }, 600);
   };
   
+  // Verificar se o livro está disponível
+  const isAvailable = book.stock !== undefined && book.stock > 0;
+  const categoryName = book.category?.name || 'Sem categoria';
+  
   return (
-    <Link 
-      href={`/livro/${slug}`}
-      className="group bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
+    <div 
+      className="book-card-hover card group animate-fade-in"
+      style={{ animationDelay }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-40 sm:h-48 md:h-64 overflow-hidden bg-gray-100">
-        <Image
-          src={coverImage}
-          alt={title}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            // Imagem de fallback se houver erro
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/book-placeholder.jpg';
-          }}
-        />
-        
-        {discount > 0 && (
-          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-accent-500 text-white text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded">
-            -{discount}%
+      <div className="relative overflow-hidden">
+        {/* Ribbon de desconto */}
+        {book.original_price && book.original_price > book.price && (
+          <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-accent-500 to-primary-500 text-white text-xs font-bold py-1.5 px-4 shadow-md transform rotate-45 translate-x-6 -translate-y-1">
+            {Math.round((1 - book.price / book.original_price) * 100)}% OFF
           </div>
         )}
         
-        <button
-          onClick={handleAddToCart}
-          className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-primary-600 hover:bg-primary-700 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          aria-label="Adicionar ao carrinho"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 sm:h-5 sm:w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-          </svg>
-        </button>
-      </div>
-      
-      <div className="p-2 sm:p-3 md:p-4 flex-grow flex flex-col">
-        <span className="text-xs text-accent-600 mb-0.5 sm:mb-1 line-clamp-1">{category}</span>
-        <h3 className="text-primary-900 font-semibold text-sm sm:text-base md:text-lg mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-primary-700 transition-colors">
-          {title}
-        </h3>
-        <p className="text-gray-600 text-xs sm:text-sm mb-1 sm:mb-2 md:mb-3 line-clamp-1">{author}</p>
-        <div className="mt-auto">
-          <div className="flex items-baseline flex-wrap">
-            <span className="text-primary-900 font-bold text-sm sm:text-base md:text-lg">
-              {formatCurrency(price)}
-            </span>
-            {originalPrice && originalPrice > price && (
-              <span className="text-gray-400 text-xs sm:text-sm line-through ml-1 sm:ml-2">
-                {formatCurrency(originalPrice)}
-              </span>
-            )}
+        <Link href={`/produto/${book.slug}`} className="block">
+          <div className="relative aspect-[5/8] w-full bg-primary-50 overflow-hidden">
+            <Image 
+              src={book.cover_image || "/images/book-placeholder.jpg"}
+              alt={book.title}
+              fill
+              style={{ objectFit: 'contain' }}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className={`transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
+            />
+            
+            {/* Overlay de hover */}
+            <div className={`absolute inset-0 bg-black bg-opacity-20 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-white bg-opacity-90 text-primary-800 font-medium py-2 px-4 rounded-full transform transition-all duration-300 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
+                  Ver detalhes
+                </span>
+              </div>
+            </div>
           </div>
+        </Link>
+        
+        {/* Indicador de disponibilidade */}
+        <div className="absolute top-3 left-3">
+          {isAvailable ? (
+            <Badge variant="success" size="sm" rounded>Em estoque</Badge>
+          ) : (
+            <Badge variant="error" size="sm" rounded>Indisponível</Badge>
+          )}
         </div>
       </div>
-    </Link>
+      
+      <div className="card-body">
+        <div className="mb-2">
+          <p className="text-xs text-primary-500 font-medium uppercase tracking-wider">{categoryName}</p>
+        </div>
+        
+        <Link href={`/produto/${book.slug}`} className="block group">
+          <h3 className="heading-display text-lg text-primary-800 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
+            {book.title}
+          </h3>
+        </Link>
+        
+        <p className="text-sm text-primary-600 mb-3 italic">{book.author}</p>
+        
+        <div className="flex flex-wrap items-center justify-between mt-auto pt-3 border-t border-primary-100">
+          <div>
+            <div className="flex items-baseline">
+              <span className="text-xl font-display font-bold text-primary-800">
+                R${book.price.toFixed(2)}
+              </span>
+              {book.original_price && book.original_price > book.price && (
+                <span className="text-sm text-primary-400 line-through ml-2">
+                  R${book.original_price.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-primary-400 mt-1">
+              {book.pages || 0} páginas
+            </div>
+          </div>
+          
+          <Button
+            variant="primary" 
+            size="sm"
+            onClick={handleAdicionarAoCarrinho}
+            disabled={!isAvailable}
+            className={`rounded-full ${botaoAnimado ? 'animate-cart-pulse' : ''}`}
+            leftIcon={
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            }
+          >
+            Adicionar
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 } 

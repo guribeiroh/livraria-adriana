@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { livros } from './data/livros';
-import LivroCard from './components/LivroCard';
+import { Book } from './lib/supabase';
+import { getFeaturedBooks, getBestsellerBooks, getNewBooks } from './lib/database';
+import BookCard from './components/BookCard';
 import Hero from './components/Hero';
 import { FeatureSection } from './components/FeatureCard';
 import Testimonials from './components/Testimonials';
@@ -13,24 +14,59 @@ import SectionTitle from './components/SectionTitle';
 
 export default function HomePage() {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
-  const [livrosDestaque, setLivrosDestaque] = useState<typeof livros>([]);
-  const [livrosLancamentos, setLivrosLancamentos] = useState<typeof livros>([]);
+  const [livrosDestaque, setLivrosDestaque] = useState<Book[]>([]);
+  const [livrosLancamentos, setLivrosLancamentos] = useState<Book[]>([]);
   const [categoriasFeatured, setCategoriasFeatured] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Simulando obtenção de dados
+  // Buscar dados dos livros do Supabase
   useEffect(() => {
-    // Livros em destaque (4 livros aleatórios)
-    const shuffled = [...livros].sort(() => 0.5 - Math.random());
-    setLivrosDestaque(shuffled.slice(0, 8));
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Buscar livros em destaque
+        const featuredBooks = await getFeaturedBooks(8);
+        setLivrosDestaque(featuredBooks);
+        
+        // Buscar lançamentos
+        const newBooks = await getNewBooks(4);
+        setLivrosLancamentos(newBooks);
+        
+        // Extrair categorias únicas dos livros
+        const categorias = new Set<string>();
+        featuredBooks.forEach(book => {
+          if (book.category?.name) {
+            categorias.add(book.category.name);
+          }
+        });
+        
+        setCategoriasFeatured(Array.from(categorias).slice(0, 4));
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Lançamentos (4 livros mais recentes)
-    const sortedByDate = [...livros].sort((a, b) => b.anoPublicacao - a.anoPublicacao);
-    setLivrosLancamentos(sortedByDate.slice(0, 4));
-    
-    // Categorias em destaque
-    const allCategorias = Array.from(new Set(livros.map(livro => livro.categoria)));
-    setCategoriasFeatured(allCategorias.slice(0, 4));
+    fetchData();
   }, []);
+
+  // Renderização condicional durante carregamento
+  const renderSkeletonCard = () => (
+    <div className="bg-gray-100 animate-pulse rounded-lg overflow-hidden">
+      <div className="aspect-[5/8] w-full bg-gray-200"></div>
+      <div className="p-4">
+        <div className="h-3 bg-gray-200 rounded w-1/3 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+        <div className="flex justify-between items-center">
+          <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-8 bg-gray-200 rounded-full w-1/4"></div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <main className="min-h-screen">
@@ -48,9 +84,17 @@ export default function HomePage() {
           </SectionTitle>
           
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mt-10">
-            {livrosDestaque.map((livro, index) => (
-              <LivroCard key={livro.id} livro={livro} index={index} />
-            ))}
+            {isLoading ? (
+              Array(8).fill(0).map((_, index) => (
+                <div key={`skeleton-${index}`}>{renderSkeletonCard()}</div>
+              ))
+            ) : livrosDestaque.length > 0 ? (
+              livrosDestaque.map((book, index) => (
+                <BookCard key={book.id} book={book} index={index} />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-gray-500 py-8">Nenhum livro em destaque encontrado.</p>
+            )}
           </div>
           
           <div className="text-center mt-8 md:mt-12">
@@ -117,9 +161,17 @@ export default function HomePage() {
           </SectionTitle>
           
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-10">
-            {livrosLancamentos.map((livro, index) => (
-              <LivroCard key={livro.id} livro={livro} index={index} />
-            ))}
+            {isLoading ? (
+              Array(4).fill(0).map((_, index) => (
+                <div key={`skeleton-launch-${index}`}>{renderSkeletonCard()}</div>
+              ))
+            ) : livrosLancamentos.length > 0 ? (
+              livrosLancamentos.map((book, index) => (
+                <BookCard key={book.id} book={book} index={index} />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-gray-500 py-8">Nenhum lançamento encontrado.</p>
+            )}
           </div>
           
           <div className="text-center mt-8 md:mt-12">
