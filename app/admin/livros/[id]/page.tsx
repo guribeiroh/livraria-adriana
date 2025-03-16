@@ -542,7 +542,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
             id="description"
             name="description"
             rows={6}
-            value={formData.description}
+            value={formData.description || ''}
             onChange={handleChange}
             className={`block w-full border ${
               errors.description ? 'border-error-300 focus:ring-error-500 focus:border-error-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
