@@ -142,16 +142,19 @@ export function useBookSearch(query: string, limit = 20) {
 
   useEffect(() => {
     const fetchBooks = async () => {
-      if (!query.trim()) {
-        setBooks([]);
-        return;
-      }
-
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+        let response;
+        
+        // Se não houver query, buscar todos os livros
+        if (!query.trim()) {
+          response = await fetch(`/api/books?limit=${limit}`);
+        } else {
+          response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+        }
+        
         const data = await response.json();
 
         if (!response.ok) {
