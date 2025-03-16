@@ -106,10 +106,10 @@ export default function Navbar() {
                       <>
                         <ul className="max-h-40 overflow-y-auto mb-4">
                           {carrinho.itens.map(item => (
-                            <li key={item.id} className="flex items-center py-2 border-b">
-                              <span className="flex-1 text-sm">{item.titulo}</span>
+                            <li key={item.livro.id} className="flex items-center py-2 border-b">
+                              <span className="flex-1 text-sm">{item.livro.titulo}</span>
                               <span className="text-sm text-primary-600">{item.quantidade}x</span>
-                              <span className="text-sm font-medium ml-2">R${item.preco.toFixed(2)}</span>
+                              <span className="text-sm font-medium ml-2">R${item.livro.preco.toFixed(2)}</span>
                             </li>
                           ))}
                         </ul>
