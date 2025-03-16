@@ -309,7 +309,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
                 type="text"
                 id="isbn"
                 name="isbn"
-                value={formData.isbn}
+                value={formData.isbn || ''}
                 onChange={handleChange}
                 placeholder="Ex: 978-3-16-148410-0"
                 className={`block w-full border ${
