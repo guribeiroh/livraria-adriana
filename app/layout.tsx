@@ -7,8 +7,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import NotificacaoCarrinho from './components/NotificacaoCarrinho';
 import FloatingCartButton from './components/FloatingCartButton';
-import NotificacaoProvider from './context/NotificacaoContext';
-import { Providers } from './Providers';
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -44,24 +42,20 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${inter.variable} ${merriweather.variable} ${playfairDisplay.variable} scroll-smooth`} suppressHydrationWarning>
       <body className="bg-background text-primary-900 min-h-screen flex flex-col relative selection:bg-primary-200 selection:text-primary-900 overflow-x-hidden">
-        <Providers>
-          <NotificacaoProvider>
-            <CarrinhoProvider>
-              <AuthProvider>
-                {/* Efeito decorativo */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
-                
-                <Navbar />
-                <NotificacaoCarrinho />
-                <main className="pt-20 flex-grow">
-                  {children}
-                </main>
-                <Footer />
-                <FloatingCartButton />
-              </AuthProvider>
-            </CarrinhoProvider>
-          </NotificacaoProvider>
-        </Providers>
+        <AuthProvider>
+          <CarrinhoProvider>
+            {/* Efeito decorativo */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
+            
+            <Navbar />
+            <NotificacaoCarrinho />
+            <main className="pt-20 flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <FloatingCartButton />
+          </CarrinhoProvider>
+        </AuthProvider>
       </body>
     </html>
   );
