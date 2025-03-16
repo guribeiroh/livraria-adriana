@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CarrinhoProvider } from "./context/CarrinhoContext";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,9 +22,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <CarrinhoProvider>
           <Navbar />
-          <div className="pt-20">
+          <div className="pt-20 min-h-screen">
             {children}
           </div>
+          <Footer />
         </CarrinhoProvider>
       </body>
     </html>
