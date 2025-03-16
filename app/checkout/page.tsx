@@ -7,78 +7,120 @@ import { useCarrinho } from '../context/CarrinhoContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { carrinho, limparCarrinho } = useCarrinho();
+  const { carrinho } = useCarrinho();
   const [carregando, setCarregando] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
     telefone: '',
-    endereco: '',
+    rua: '',
     cidade: '',
     estado: '',
-    cep: '',
-    numeroCartao: '',
-    nomeCartao: '',
-    validade: '',
-    cvv: ''
+    cep: ''
   });
   
-  const [etapa, setEtapa] = useState(1);
+  const [errors, setErrors] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    rua: '',
+    cidade: '',
+    estado: '',
+    cep: ''
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const validarEtapa1 = () => {
-    const { nome, email, telefone, endereco, cidade, estado, cep } = formData;
-    return nome && email && telefone && endereco && cidade && estado && cep;
-  };
-
-  const validarEtapa2 = () => {
-    const { numeroCartao, nomeCartao, validade, cvv } = formData;
-    return numeroCartao && nomeCartao && validade && cvv;
-  };
-
-  const avancarEtapa = () => {
-    if (etapa === 1 && validarEtapa1()) {
-      setEtapa(2);
+    
+    // Limpar erro ao editar campo
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const voltarEtapa = () => {
-    if (etapa === 2) {
-      setEtapa(1);
+  const validarFormulario = () => {
+    const newErrors = { ...errors };
+    let isValid = true;
+
+    // Validar nome
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+      isValid = false;
     }
+
+    // Validar email
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+      isValid = false;
+    }
+
+    // Validar telefone
+    if (!formData.telefone.trim()) {
+      newErrors.telefone = 'Telefone é obrigatório';
+      isValid = false;
+    }
+
+    // Validar rua
+    if (!formData.rua.trim()) {
+      newErrors.rua = 'Rua é obrigatória';
+      isValid = false;
+    }
+
+    // Validar cidade
+    if (!formData.cidade.trim()) {
+      newErrors.cidade = 'Cidade é obrigatória';
+      isValid = false;
+    }
+
+    // Validar estado
+    if (!formData.estado.trim()) {
+      newErrors.estado = 'Estado é obrigatório';
+      isValid = false;
+    }
+
+    // Validar CEP
+    if (!formData.cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
-  const finalizarCompra = (e: React.FormEvent) => {
+  const prosseguirParaUpsell = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validarEtapa2()) return;
-    
+    if (!validarFormulario()) {
+      return;
+    }
+
     setCarregando(true);
     
-    // Simulação de processamento de pagamento
+    // Simular processamento
     setTimeout(() => {
+      // Salvar os dados do cliente no localStorage para uso posterior
+      localStorage.setItem('dadosCliente', JSON.stringify(formData));
+      
+      // Redirecionar para a página de upsell
+      router.push('/checkout/upsell');
+      
       setCarregando(false);
-      // Salvar informação de pedido confirmado
-      localStorage.setItem('pedido_confirmado', 'true');
-      // Limpar carrinho após a compra
-      limparCarrinho();
-      // Redirecionar para página de confirmação
-      router.push('/checkout/confirmacao');
-    }, 2000);
+    }, 1000);
   };
 
   if (carrinho.itens.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <p className="text-gray-500 mb-6">Seu carrinho está vazio</p>
-          <Link href="/" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
-            Continuar Comprando
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Seu carrinho está vazio</h1>
+          <p className="mb-4">Adicione itens ao seu carrinho para continuar.</p>
+          <Link href="/" className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors">
+            Voltar para a loja
           </Link>
         </div>
       </div>
@@ -86,251 +128,165 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-6">Finalizar Compra</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">Finalizar Compra</h1>
       
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Formulário de checkout */}
-        <div className="md:w-2/3">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex mb-8">
-              <div className={`flex-1 border-b-2 pb-3 ${etapa === 1 ? 'border-blue-600 text-blue-600' : 'border-gray-300 text-gray-500'}`}>
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-2 ${etapa === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>1</span>
-                Informações Pessoais
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Resumo do pedido */}
+        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Resumo do Pedido</h2>
+          
+          <div className="divide-y divide-gray-200">
+            {carrinho.itens.map((item) => (
+              <div key={item.livro.id} className="py-3 flex justify-between">
+                <div>
+                  <p className="font-medium">{item.livro.titulo}</p>
+                  <p className="text-sm text-gray-600">Qtd: {item.quantidade}</p>
+                </div>
+                <p className="font-medium">
+                  R$ {(item.livro.preco * item.quantidade).toFixed(2)}
+                </p>
               </div>
-              <div className={`flex-1 border-b-2 pb-3 ${etapa === 2 ? 'border-blue-600 text-blue-600' : 'border-gray-300 text-gray-500'}`}>
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-2 ${etapa === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>2</span>
-                Pagamento
-              </div>
+            ))}
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total:</span>
+              <span>R$ {carrinho.total.toFixed(2)}</span>
             </div>
-            
-            <form onSubmit={finalizarCompra}>
-              {etapa === 1 && (
-                <div className="etapa-1">
-                  <h2 className="text-xl font-semibold mb-4">Informações Pessoais</h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                      <input
-                        type="text"
-                        id="nome"
-                        name="nome"
-                        value={formData.nome}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                    <input
-                      type="tel"
-                      id="telefone"
-                      name="telefone"
-                      value={formData.telefone}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold mb-3 mt-6">Endereço de Entrega</h3>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="endereco" className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                    <input
-                      type="text"
-                      id="endereco"
-                      name="endereco"
-                      value={formData.endereco}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-                      <input
-                        type="text"
-                        id="cidade"
-                        name="cidade"
-                        value={formData.cidade}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                      <input
-                        type="text"
-                        id="estado"
-                        name="estado"
-                        value={formData.estado}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                      <input
-                        type="text"
-                        id="cep"
-                        name="cep"
-                        value={formData.cep}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={avancarEtapa}
-                      disabled={!validarEtapa1()}
-                      className={`px-6 py-2 rounded-md text-white ${validarEtapa1() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                    >
-                      Próximo
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {etapa === 2 && (
-                <div className="etapa-2">
-                  <h2 className="text-xl font-semibold mb-4">Informações de Pagamento</h2>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="numeroCartao" className="block text-sm font-medium text-gray-700 mb-1">Número do Cartão</label>
-                    <input
-                      type="text"
-                      id="numeroCartao"
-                      name="numeroCartao"
-                      value={formData.numeroCartao}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0000 0000 0000 0000"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="nomeCartao" className="block text-sm font-medium text-gray-700 mb-1">Nome no Cartão</label>
-                    <input
-                      type="text"
-                      id="nomeCartao"
-                      name="nomeCartao"
-                      value={formData.nomeCartao}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="validade" className="block text-sm font-medium text-gray-700 mb-1">Data de Validade</label>
-                      <input
-                        type="text"
-                        id="validade"
-                        name="validade"
-                        value={formData.validade}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="MM/AA"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                      <input
-                        type="text"
-                        id="cvv"
-                        name="cvv"
-                        value={formData.cvv}
-                        onChange={handleChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="123"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 flex justify-between">
-                    <button
-                      type="button"
-                      onClick={voltarEtapa}
-                      className="px-6 py-2 rounded-md border border-gray-300 hover:bg-gray-100"
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={!validarEtapa2() || carregando}
-                      className={`px-6 py-2 rounded-md text-white ${validarEtapa2() && !carregando ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                    >
-                      {carregando ? 'Processando...' : 'Finalizar Compra'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </form>
           </div>
         </div>
         
-        {/* Resumo do pedido */}
-        <div className="md:w-1/3">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Resumo do Pedido</h2>
-            
-            <ul className="divide-y divide-gray-200 mb-4">
-              {carrinho.itens.map((item) => (
-                <li key={item.livro.id} className="py-3 flex justify-between">
-                  <div>
-                    <p className="font-medium">{item.livro.titulo}</p>
-                    <p className="text-sm text-gray-500">Qtd: {item.quantidade}</p>
-                  </div>
-                  <span>R${(item.livro.preco * item.quantidade).toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-            
-            <div className="border-t border-b py-4 mb-4">
-              <div className="flex justify-between mb-2">
-                <span>Subtotal</span>
-                <span>R${carrinho.total.toFixed(2)}</span>
+        {/* Formulário de checkout */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Dados de Entrega</h2>
+          
+          <form onSubmit={prosseguirParaUpsell}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  id="nome"
+                  name="nome"
+                  value={formData.nome}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.nome ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.nome && <p className="text-red-500 text-xs mt-1">{errors.nome}</p>}
               </div>
-              <div className="flex justify-between">
-                <span>Frete</span>
-                <span>Grátis</span>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Telefone *
+                </label>
+                <input
+                  type="tel"
+                  id="telefone"
+                  name="telefone"
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.telefone ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.telefone && <p className="text-red-500 text-xs mt-1">{errors.telefone}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">
+                  CEP *
+                </label>
+                <input
+                  type="text"
+                  id="cep"
+                  name="cep"
+                  value={formData.cep}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.cep ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.cep && <p className="text-red-500 text-xs mt-1">{errors.cep}</p>}
+              </div>
+              
+              <div className="md:col-span-2">
+                <label htmlFor="rua" className="block text-sm font-medium text-gray-700 mb-1">
+                  Rua *
+                </label>
+                <input
+                  type="text"
+                  id="rua"
+                  name="rua"
+                  value={formData.rua}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.rua ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.rua && <p className="text-red-500 text-xs mt-1">{errors.rua}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">
+                  Cidade *
+                </label>
+                <input
+                  type="text"
+                  id="cidade"
+                  name="cidade"
+                  value={formData.cidade}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.cidade ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.cidade && <p className="text-red-500 text-xs mt-1">{errors.cidade}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">
+                  Estado *
+                </label>
+                <input
+                  type="text"
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-md ${errors.estado ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.estado && <p className="text-red-500 text-xs mt-1">{errors.estado}</p>}
               </div>
             </div>
             
-            <div className="flex justify-between font-semibold text-lg">
-              <span>Total</span>
-              <span>R${carrinho.total.toFixed(2)}</span>
+            <div className="flex justify-between mt-6">
+              <Link 
+                href="/carrinho"
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Voltar para o Carrinho
+              </Link>
+              
+              <button
+                type="submit"
+                disabled={carregando}
+                className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50"
+              >
+                {carregando ? 'Processando...' : 'Continuar'}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
