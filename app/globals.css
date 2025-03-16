@@ -4,20 +4,34 @@
 
 :root {
   --foreground-rgb: 67, 47, 26;
-  --background-start-rgb: 247, 245, 242;
-  --background-end-rgb: 247, 245, 242;
+  --background-start-rgb: 250, 248, 245;
+  --background-end-rgb: 250, 248, 245;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgb(var(--background-end-rgb))
+      )
+      rgb(var(--background-start-rgb));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-bold;
+  }
+  
+  ::selection {
+    @apply bg-primary-100 text-primary-900;
+  }
 }
 
 * {
@@ -29,11 +43,11 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 a:hover {
-  color: #a0784c;
+  color: #b08c69;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,9 +56,30 @@ a:hover {
   }
 }
 
+/* Glass effect */
+.glass {
+  @apply bg-white bg-opacity-20 backdrop-blur-sm border border-white border-opacity-20 shadow-soft;
+}
+
+.glass-dark {
+  @apply bg-primary-900 bg-opacity-10 backdrop-blur-sm border border-primary-900 border-opacity-10;
+}
+
 @layer components {
   .btn {
-    @apply rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center;
+    @apply rounded-lg font-medium transition-all duration-300 inline-flex items-center justify-center relative overflow-hidden shadow-soft;
+  }
+  
+  .btn::before {
+    @apply content-[''] absolute w-full h-full top-0 left-0 bg-white opacity-0 transition-opacity duration-300;
+  }
+  
+  .btn:hover::before {
+    @apply opacity-10;
+  }
+  
+  .btn:active::before {
+    @apply opacity-20;
   }
   
   .btn-primary {
@@ -52,7 +87,11 @@ a:hover {
   }
   
   .btn-secondary {
-    @apply bg-accent-400 text-primary-800 hover:bg-accent-500 active:bg-accent-300 py-2 px-4;
+    @apply bg-secondary-500 text-white hover:bg-secondary-600 active:bg-secondary-400 py-2 px-4;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-500 text-primary-900 hover:bg-accent-400 active:bg-accent-300 py-2 px-4;
   }
   
   .btn-outline {
@@ -60,7 +99,7 @@ a:hover {
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-soft transition-shadow duration-300 hover:shadow-hover overflow-hidden;
+    @apply bg-white rounded-xl shadow-card transition-all duration-300 hover:shadow-elevated overflow-hidden;
   }
   
   .card-body {
@@ -68,10 +107,52 @@ a:hover {
   }
   
   .input {
-    @apply px-3 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all duration-200;
+    @apply px-3 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all duration-200 shadow-soft;
   }
   
   .heading-serif {
     @apply font-serif font-bold;
   }
+  
+  .heading-display {
+    @apply font-display font-bold;
+  }
+  
+  .decorated-title {
+    @apply relative pb-3 mb-6 inline-block;
+  }
+  
+  .decorated-title::after {
+    @apply content-[''] absolute bottom-0 left-0 w-2/3 h-1 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 inline-block text-transparent bg-clip-text;
+  }
+}
+
+/* Animações para produtos */
+.book-card-hover {
+  @apply transition duration-500 transform-gpu;
+}
+
+.book-card-hover:hover {
+  @apply -translate-y-1 scale-[1.02];
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-primary-50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-400;
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Merriweather } from "next/font/google";
+import { Inter, Merriweather, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { CarrinhoProvider } from "./context/CarrinhoContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -20,9 +20,17 @@ const merriweather = Merriweather({
   variable: '--font-merriweather',
 });
 
+const playfairDisplay = Playfair_Display({
+  weight: ['400', '500', '600', '700', '800', '900'],
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-playfair-display',
+});
+
 export const metadata: Metadata = {
-  title: "Livraria JessyKaroline",
-  description: "Sua livraria online com os melhores títulos",
+  title: "Livraria JessyKaroline | Sua Jornada Literária Começa Aqui",
+  description: "Descubra uma seleção cuidadosa dos melhores livros nacionais e internacionais, com curadoria para todos os gostos literários.",
+  keywords: "livraria, livros, literatura, leitura, comprar livros, ebooks, livros online",
 };
 
 export default function RootLayout({
@@ -31,14 +39,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${merriweather.variable}`}>
-      <body className="bg-background text-primary-900 min-h-screen flex flex-col">
+    <html lang="pt-BR" className={`${inter.variable} ${merriweather.variable} ${playfairDisplay.variable} scroll-smooth`}>
+      <body className="bg-background text-primary-900 min-h-screen flex flex-col relative selection:bg-primary-200 selection:text-primary-900 overflow-x-hidden">
         <AuthProvider>
           <CarrinhoProvider>
+            {/* Efeito decorativo */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
+            
             <Navbar />
-            <div className="pt-20 flex-grow">
+            <main className="pt-20 flex-grow">
               {children}
-            </div>
+            </main>
             <BackToTop />
             <Footer />
           </CarrinhoProvider>
