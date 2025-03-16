@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Book, Category, Review, Order, OrderItem, User, Wishlist, Coupon } from './supabase';
+import { slugify } from './utils';
 
 // Funções para obter dados
 export async function getCategories(): Promise<Category[]> {
@@ -388,40 +389,58 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
   try {
     console.log(`Atualizando livro ${id} com dados:`, updates);
     
-    // Remover propriedades que não existem na tabela do banco ou possam causar problemas
+    // Extrair somente os campos permitidos para atualização
     const { 
-      category, 
-      created_at, 
-      updated_at, 
-      id: bookId, 
-      ...bookData 
+      title,
+      author,
+      description,
+      price,
+      original_price,
+      isbn,
+      publication_year,
+      pages,
+      stock,
+      cover_image,
+      category_id,
+      is_featured,
+      is_bestseller,
+      is_new,
+      is_active,
+      slug,
     } = updates as any;
     
-    // Limitar o tamanho da imagem se for muito grande
-    if (bookData.cover_image && bookData.cover_image.length > 300000) {
-      console.log('Imagem de capa muito grande, usando imagem padrão');
-      bookData.cover_image = null;
+    // Criar objeto com apenas os campos permitidos
+    const bookData: any = {};
+    if (title !== undefined) bookData.title = title;
+    if (author !== undefined) bookData.author = author;
+    if (description !== undefined) bookData.description = description;
+    if (price !== undefined) bookData.price = Number(price);
+    if (original_price !== undefined) bookData.original_price = original_price ? Number(original_price) : null;
+    if (isbn !== undefined) bookData.isbn = isbn;
+    if (publication_year !== undefined) bookData.publication_year = publication_year ? Number(publication_year) : null;
+    if (pages !== undefined) bookData.pages = pages ? Number(pages) : null;
+    if (stock !== undefined) bookData.stock = Number(stock || 0);
+    if (category_id !== undefined) bookData.category_id = category_id;
+    if (is_featured !== undefined) bookData.is_featured = is_featured;
+    if (is_bestseller !== undefined) bookData.is_bestseller = is_bestseller;
+    if (is_new !== undefined) bookData.is_new = is_new;
+    if (is_active !== undefined) bookData.is_active = is_active;
+    
+    // Tratar o slug (se o título foi modificado e não há slug explícito)
+    if (title && !slug) {
+      // No update, não validamos o slug para evitar problemas
+      bookData.slug = updates.slug || slugify(title);
+    } else if (slug) {
+      bookData.slug = slug;
     }
     
-    // Garantir que campos numéricos sejam números
-    if (bookData.price) bookData.price = Number(bookData.price);
-    if (bookData.original_price) bookData.original_price = Number(bookData.original_price);
-    if (bookData.pages) bookData.pages = Number(bookData.pages);
-    if (bookData.publication_year) bookData.publication_year = Number(bookData.publication_year);
-    if (bookData.stock) bookData.stock = Number(bookData.stock);
-    
-    // Garantir que o slug seja válido e único
-    if (bookData.title && (!bookData.slug || bookData.slug.trim() === '')) {
-      const { data: slugCheck } = await supabase
-        .from('books')
-        .select('id')
-        .eq('slug', bookData.slug)
-        .neq('id', id)
-        .single();
-      
-      if (slugCheck) {
-        console.log('Slug já existe, adicionando sufixo');
-        bookData.slug = `${bookData.slug}-${Date.now().toString().slice(-4)}`;
+    // Tratar a imagem (remover se for muito grande)
+    if (cover_image !== undefined) {
+      if (cover_image && typeof cover_image === 'string' && cover_image.length > 300000) {
+        console.log('Imagem de capa muito grande, usando null');
+        bookData.cover_image = null;
+      } else {
+        bookData.cover_image = cover_image;
       }
     }
     
@@ -451,27 +470,57 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
   try {
     console.log('Criando novo livro com dados:', book);
     
-    // Remover propriedades que não existem na tabela do banco
+    // Extrair somente os campos permitidos para criação
     const { 
-      category, 
-      created_at, 
-      updated_at, 
-      id,
-      ...bookData 
+      title,
+      author,
+      description,
+      price,
+      original_price,
+      isbn,
+      publication_year,
+      pages,
+      stock,
+      cover_image,
+      category_id,
+      is_featured,
+      is_bestseller,
+      is_new,
+      is_active,
+      slug,
     } = book as any;
     
-    // Limitar o tamanho da imagem se for muito grande
-    if (bookData.cover_image && bookData.cover_image.length > 300000) {
-      console.log('Imagem de capa muito grande, usando imagem padrão');
-      bookData.cover_image = null;
+    // Criar objeto com apenas os campos permitidos
+    const bookData: any = {};
+    if (title !== undefined) bookData.title = title;
+    if (author !== undefined) bookData.author = author;
+    if (description !== undefined) bookData.description = description;
+    if (price !== undefined) bookData.price = Number(price);
+    if (original_price !== undefined) bookData.original_price = original_price ? Number(original_price) : null;
+    if (isbn !== undefined) bookData.isbn = isbn;
+    if (publication_year !== undefined) bookData.publication_year = publication_year ? Number(publication_year) : null;
+    if (pages !== undefined) bookData.pages = pages ? Number(pages) : null;
+    if (stock !== undefined) bookData.stock = Number(stock || 0);
+    if (category_id !== undefined) bookData.category_id = category_id;
+    if (is_featured !== undefined) bookData.is_featured = is_featured;
+    if (is_bestseller !== undefined) bookData.is_bestseller = is_bestseller;
+    if (is_new !== undefined) bookData.is_new = is_new;
+    if (is_active !== undefined) bookData.is_active = is_active;
+    
+    // Tratar o slug
+    if (title) {
+      bookData.slug = slug || slugify(title);
     }
     
-    // Garantir que campos numéricos sejam números
-    if (bookData.price) bookData.price = Number(bookData.price);
-    if (bookData.original_price) bookData.original_price = Number(bookData.original_price);
-    if (bookData.pages) bookData.pages = Number(bookData.pages);
-    if (bookData.publication_year) bookData.publication_year = Number(bookData.publication_year);
-    if (bookData.stock) bookData.stock = Number(bookData.stock);
+    // Tratar a imagem (remover se for muito grande)
+    if (cover_image !== undefined) {
+      if (cover_image && typeof cover_image === 'string' && cover_image.length > 300000) {
+        console.log('Imagem de capa muito grande, usando null');
+        bookData.cover_image = null;
+      } else {
+        bookData.cover_image = cover_image;
+      }
+    }
     
     console.log('Dados finais para criação:', bookData);
     

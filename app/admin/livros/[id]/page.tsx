@@ -96,7 +96,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
         if (result.length > 500000) {
           setFormData(prev => ({
             ...prev,
-            cover_image: "data:image/jpeg;base64,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"
+            cover_image: "data:image/jpeg;base64,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"
           }));
         } else {
           setFormData(prev => ({
@@ -148,7 +148,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    // Validar campos obrigatórios
+    // Validar campos realmente obrigatórios
     if (!formData.title?.trim()) {
       newErrors.title = 'O título é obrigatório';
     }
@@ -161,21 +161,11 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.price = 'O preço deve ser maior que zero';
     }
     
-    if (!formData.description?.trim()) {
-      newErrors.description = 'A descrição é obrigatória';
-    }
+    // Descrição e categoria são consideradas opcionais
     
-    if (!formData.category_id) {
-      newErrors.category_id = 'A categoria é obrigatória';
-    }
+    // ISBN é opcional
     
-    if (!formData.isbn?.trim()) {
-      newErrors.isbn = 'O ISBN é obrigatório';
-    }
-    
-    if (!formData.cover_image) {
-      newErrors.cover_image = 'A imagem da capa é obrigatória';
-    }
+    // Imagem de capa é opcional
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -191,34 +181,36 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     try {
       setIsSubmitting(true);
       
-      // Limpar e processar dados para o banco de dados
-      const bookDataToSave = {
-        ...formData,
-        price: Number(formData.price),
-        original_price: formData.original_price ? Number(formData.original_price) : null,
-        pages: formData.pages ? Number(formData.pages) : null,
-        publication_year: formData.publication_year ? Number(formData.publication_year) : null,
-        stock: Number(formData.stock || 0),
-        slug: formData.slug || slugify(formData.title || ''),
-        // Não enviar propriedades não presentes na tabela
-        category: undefined,
+      // Criar um objeto com apenas os campos essenciais
+      const essentialFields = {
+        title: formData.title,
+        author: formData.author,
+        price: formData.price ? Number(formData.price) : 0,
+        // Campos opcionais - apenas incluídos se tiverem valor
+        ...(formData.description ? { description: formData.description } : {}),
+        ...(formData.category_id ? { category_id: formData.category_id } : {}),
+        ...(formData.isbn ? { isbn: formData.isbn } : {}),
+        ...(formData.original_price ? { original_price: Number(formData.original_price) } : {}),
+        ...(formData.pages ? { pages: Number(formData.pages) } : {}),
+        ...(formData.publication_year ? { publication_year: Number(formData.publication_year) } : {}),
+        ...(formData.stock ? { stock: Number(formData.stock) } : {}),
+        ...(formData.is_active !== undefined ? { is_active: formData.is_active } : {}),
+        ...(formData.is_bestseller !== undefined ? { is_bestseller: formData.is_bestseller } : {}),
+        ...(formData.is_featured !== undefined ? { is_featured: formData.is_featured } : {}),
+        ...(formData.is_new !== undefined ? { is_new: formData.is_new } : {}),
+        ...(formData.cover_image ? { cover_image: formData.cover_image } : {}),
+        // Sempre incluir um slug, se disponível ou gerar a partir do título
+        slug: formData.slug || slugify(formData.title || '')
       };
-
-      // Remover campos vazios ou undefined
-      Object.keys(bookDataToSave).forEach(key => {
-        if (bookDataToSave[key as keyof typeof bookDataToSave] === undefined || bookDataToSave[key as keyof typeof bookDataToSave] === '') {
-          delete bookDataToSave[key as keyof typeof bookDataToSave];
-        }
-      });
       
-      console.log('Dados do livro a serem salvos:', bookDataToSave);
+      console.log('Dados do livro a serem salvos:', essentialFields);
       
       let resultado;
       
       if (isNewBook) {
-        resultado = await createBook(bookDataToSave);
+        resultado = await createBook(essentialFields);
       } else {
-        resultado = await updateBook(formData.id as string, bookDataToSave);
+        resultado = await updateBook(formData.id as string, essentialFields);
       }
       
       if (resultado) {
