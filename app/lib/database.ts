@@ -364,6 +364,8 @@ export async function validateCoupon(code: string, totalValue: number): Promise<
 // Funções para o painel de administração
 export async function getAllBooks(limit: number = 100, offset: number = 0): Promise<Book[]> {
   try {
+    console.log(`Buscando todos os livros (limite: ${limit}, offset: ${offset})`);
+    
     const { data, error } = await supabase
       .from('books')
       .select(`
@@ -375,9 +377,12 @@ export async function getAllBooks(limit: number = 100, offset: number = 0): Prom
 
     if (error) {
       console.error('Erro ao buscar todos os livros:', error);
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
       return [];
     }
 
+    console.log(`Encontrados ${data?.length || 0} livros`);
     return data || [];
   } catch (err) {
     console.error('Erro não tratado ao buscar livros:', err);
@@ -387,79 +392,43 @@ export async function getAllBooks(limit: number = 100, offset: number = 0): Prom
 
 export async function updateBook(id: string, updates: Partial<Book>): Promise<Book | null> {
   try {
-    console.log(`Atualizando livro ${id} com dados:`, updates);
+    console.log(`Atualizando livro ${id} com dados brutos:`, updates);
     
-    // Extrair somente os campos permitidos para atualização
+    // Remover campos que não devem ser atualizados
     const { 
-      title,
-      author,
-      description,
-      price,
-      original_price,
-      isbn,
-      publication_year,
-      pages,
-      stock,
-      cover_image,
-      category_id,
-      is_featured,
-      is_bestseller,
-      is_new,
-      is_active,
-      slug,
+      id: bookId, 
+      created_at, 
+      updated_at, 
+      category,
+      ...safeUpdates 
     } = updates as any;
     
-    // Criar objeto com apenas os campos permitidos
-    const bookData: any = {};
-    if (title !== undefined) bookData.title = title;
-    if (author !== undefined) bookData.author = author;
-    if (description !== undefined) bookData.description = description;
-    if (price !== undefined) bookData.price = Number(price);
-    if (original_price !== undefined) bookData.original_price = original_price ? Number(original_price) : null;
-    if (isbn !== undefined) bookData.isbn = isbn;
-    if (publication_year !== undefined) bookData.publication_year = publication_year ? Number(publication_year) : null;
-    if (pages !== undefined) bookData.pages = pages ? Number(pages) : null;
-    if (stock !== undefined) bookData.stock = Number(stock || 0);
-    if (category_id !== undefined) bookData.category_id = category_id;
-    if (is_featured !== undefined) bookData.is_featured = is_featured;
-    if (is_bestseller !== undefined) bookData.is_bestseller = is_bestseller;
-    if (is_new !== undefined) bookData.is_new = is_new;
-    if (is_active !== undefined) bookData.is_active = is_active;
+    // Certificar-se de que os campos numéricos sejam números
+    if (safeUpdates.price !== undefined) safeUpdates.price = Number(safeUpdates.price);
+    if (safeUpdates.stock !== undefined) safeUpdates.stock = Number(safeUpdates.stock);
     
-    // Tratar o slug (se o título foi modificado e não há slug explícito)
-    if (title && !slug) {
-      // No update, não validamos o slug para evitar problemas
-      bookData.slug = updates.slug || slugify(title);
-    } else if (slug) {
-      bookData.slug = slug;
+    // Garantir que temos um slug válido se o título foi alterado
+    if (safeUpdates.title && !safeUpdates.slug) {
+      safeUpdates.slug = slugify(safeUpdates.title);
     }
     
-    // Tratar a imagem (remover se for muito grande)
-    if (cover_image !== undefined) {
-      if (cover_image && typeof cover_image === 'string' && cover_image.length > 300000) {
-        console.log('Imagem de capa muito grande, usando null');
-        bookData.cover_image = null;
-      } else {
-        bookData.cover_image = cover_image;
-      }
-    }
-    
-    console.log('Dados finais para atualização:', bookData);
+    console.log('Dados simplificados para atualização:', safeUpdates);
     
     const { data, error } = await supabase
       .from('books')
-      .update(bookData)
+      .update(safeUpdates)
       .eq('id', id)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error(`Erro ao atualizar livro ${id}:`, error);
-      console.error(`Detalhes do erro:`, JSON.stringify(error));
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
+      console.error('Detalhes do erro:', error.details);
       return null;
     }
 
-    return data;
+    return data?.[0] || null;
   } catch (err) {
     console.error(`Erro não tratado ao atualizar livro ${id}:`, err);
     return null;
@@ -468,75 +437,44 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
 
 export async function createBook(book: Partial<Book>): Promise<Book | null> {
   try {
-    console.log('Criando novo livro com dados:', book);
+    console.log('Criando novo livro com dados brutos:', book);
     
-    // Extrair somente os campos permitidos para criação
-    const { 
-      title,
-      author,
-      description,
-      price,
-      original_price,
-      isbn,
-      publication_year,
-      pages,
-      stock,
-      cover_image,
-      category_id,
-      is_featured,
-      is_bestseller,
-      is_new,
-      is_active,
-      slug,
-    } = book as any;
+    // Preparar dados básicos - abordagem minimalista
+    const bookData = {
+      title: book.title || 'Sem título',
+      author: book.author || 'Desconhecido',
+      price: Number(book.price || 0),
+      slug: book.slug || slugify(book.title || 'sem-titulo'),
+      // Outros campos opcionais
+      ...(book.description ? { description: book.description } : {}),
+      ...(book.isbn ? { isbn: book.isbn } : {}),
+      ...(book.category_id ? { category_id: book.category_id } : {}),
+      ...(book.cover_image ? { cover_image: book.cover_image } : {}),
+      ...(book.stock !== undefined ? { stock: Number(book.stock) } : { stock: 0 }),
+      // Campos booleanos com valores padrão
+      is_active: book.is_active === undefined ? true : book.is_active,
+      is_featured: book.is_featured || false,
+      is_bestseller: book.is_bestseller || false,
+      is_new: book.is_new === undefined ? true : book.is_new,
+    };
     
-    // Criar objeto com apenas os campos permitidos
-    const bookData: any = {};
-    if (title !== undefined) bookData.title = title;
-    if (author !== undefined) bookData.author = author;
-    if (description !== undefined) bookData.description = description;
-    if (price !== undefined) bookData.price = Number(price);
-    if (original_price !== undefined) bookData.original_price = original_price ? Number(original_price) : null;
-    if (isbn !== undefined) bookData.isbn = isbn;
-    if (publication_year !== undefined) bookData.publication_year = publication_year ? Number(publication_year) : null;
-    if (pages !== undefined) bookData.pages = pages ? Number(pages) : null;
-    if (stock !== undefined) bookData.stock = Number(stock || 0);
-    if (category_id !== undefined) bookData.category_id = category_id;
-    if (is_featured !== undefined) bookData.is_featured = is_featured;
-    if (is_bestseller !== undefined) bookData.is_bestseller = is_bestseller;
-    if (is_new !== undefined) bookData.is_new = is_new;
-    if (is_active !== undefined) bookData.is_active = is_active;
+    console.log('Dados simplificados para criação:', bookData);
     
-    // Tratar o slug
-    if (title) {
-      bookData.slug = slug || slugify(title);
-    }
-    
-    // Tratar a imagem (remover se for muito grande)
-    if (cover_image !== undefined) {
-      if (cover_image && typeof cover_image === 'string' && cover_image.length > 300000) {
-        console.log('Imagem de capa muito grande, usando null');
-        bookData.cover_image = null;
-      } else {
-        bookData.cover_image = cover_image;
-      }
-    }
-    
-    console.log('Dados finais para criação:', bookData);
-    
+    // Usar .select().maybeSingle() em vez de .select().single() para evitar erros
     const { data, error } = await supabase
       .from('books')
       .insert(bookData)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error('Erro ao criar livro:', error);
-      console.error('Detalhes do erro:', JSON.stringify(error));
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
+      console.error('Detalhes do erro:', error.details);
       return null;
     }
 
-    return data;
+    return data?.[0] || null;
   } catch (err) {
     console.error('Erro não tratado ao criar livro:', err);
     return null;
@@ -545,6 +483,8 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
 
 export async function deleteBook(id: string): Promise<boolean> {
   try {
+    console.log(`Tentando deletar livro com ID: ${id}`);
+    
     const { error } = await supabase
       .from('books')
       .delete()
@@ -552,9 +492,13 @@ export async function deleteBook(id: string): Promise<boolean> {
 
     if (error) {
       console.error(`Erro ao deletar livro ${id}:`, error);
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
+      console.error('Detalhes do erro:', error.details);
       return false;
     }
 
+    console.log(`Livro com ID ${id} deletado com sucesso`);
     return true;
   } catch (err) {
     console.error(`Erro não tratado ao deletar livro ${id}:`, err);
