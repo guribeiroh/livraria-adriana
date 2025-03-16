@@ -26,16 +26,16 @@ export default function HomeContent() {
           </div>
         )}
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {isFeaturedLoading ? (
             // Exibir esqueletos de carregamento enquanto busca os dados
             Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="rounded-lg overflow-hidden">
-                <Skeleton className="h-64 w-full" />
-                <div className="p-4 space-y-3">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-48 md:h-64 w-full" />
+                <div className="p-2 md:p-4 space-y-2 md:space-y-3">
+                  <Skeleton className="h-3 md:h-4 w-2/3" />
+                  <Skeleton className="h-3 md:h-4 w-1/2" />
+                  <Skeleton className="h-4 md:h-6 w-1/3" />
                 </div>
               </div>
             ))
@@ -74,16 +74,16 @@ export default function HomeContent() {
           </div>
         )}
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {isBestsellerLoading ? (
             // Exibir esqueletos de carregamento enquanto busca os dados
             Array.from({ length: 8 }).map((_, index) => (
               <div key={index} className="rounded-lg overflow-hidden">
-                <Skeleton className="h-64 w-full" />
-                <div className="p-4 space-y-3">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-48 md:h-64 w-full" />
+                <div className="p-2 md:p-4 space-y-2 md:space-y-3">
+                  <Skeleton className="h-3 md:h-4 w-2/3" />
+                  <Skeleton className="h-3 md:h-4 w-1/2" />
+                  <Skeleton className="h-4 md:h-6 w-1/3" />
                 </div>
               </div>
             ))

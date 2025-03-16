@@ -291,34 +291,18 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Livros relacionados */}
-        {livrosRelacionados.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-display font-bold text-primary-800 mb-6">Você também pode gostar</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {livrosRelacionados.map(livroRel => (
-                <Link href={`/produto/${livroRel.id}`} key={livroRel.id} className="group">
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg">
-                    <div className="relative aspect-[5/8] w-full bg-primary-50">
-                      <Image 
-                        src={livroRel.imagemUrl} 
-                        alt={livroRel.titulo}
-                        fill
-                        style={{ objectFit: 'contain' }}
-                        sizes="(max-width: 768px) 100vw, 25vw"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-primary-800 line-clamp-1 group-hover:text-primary-600 transition-colors">{livroRel.titulo}</h3>
-                      <p className="text-primary-600 text-sm">{livroRel.autor}</p>
-                      <p className="text-primary-800 font-bold mt-2">R${livroRel.preco.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </Link>
+        {/* Produtos relacionados */}
+        <section className="mt-16 mb-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-primary-800 mb-6">Você também pode gostar</h2>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+              {livrosRelacionados.map((livro, index) => (
+                <LivroCard key={livro.id} livro={livro} index={index} />
               ))}
             </div>
           </div>
-        )}
+        </section>
       </div>
     </main>
   );

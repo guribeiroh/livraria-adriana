@@ -47,21 +47,16 @@ export default function HomePage() {
             Livros em Destaque
           </SectionTitle>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mt-10">
             {livrosDestaque.map((livro, index) => (
               <LivroCard key={livro.id} livro={livro} index={index} />
             ))}
           </div>
           
-          <div className="flex justify-center mt-10">
-            <Link 
-              href="/busca?categoria=destaques" 
-              className="btn btn-outline group"
-            >
-              <span>Ver Todos os Destaques</span>
-              <svg className="w-4 h-4 ml-2 transform transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+          <div className="text-center mt-8 md:mt-12">
+            <Link href="/busca?categoria=mais-vendidos" className="btn-primary">
+              Ver Mais Vendidos
+              <span className="ml-2">→</span>
             </Link>
           </div>
         </div>
@@ -112,27 +107,28 @@ export default function HomePage() {
       </section>
       
       {/* Seção de Lançamentos */}
-      <section className="py-12 md:py-16 bg-primary-50">
+      <section className="py-16 bg-primary-50">
         <div className="container mx-auto px-4">
-          <SectionTitle align="center" withAccent={false}>
-            Últimos Lançamentos
+          <SectionTitle
+            subtitle="Acabaram de chegar"
+            title="Novos Lançamentos"
+            align="center"
+          >
+            <p className="text-primary-600 max-w-2xl mx-auto text-center">
+              Fique por dentro das últimas novidades literárias. Novas histórias e aventuras para explorar.
+            </p>
           </SectionTitle>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-10">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-10">
             {livrosLancamentos.map((livro, index) => (
               <LivroCard key={livro.id} livro={livro} index={index} />
             ))}
           </div>
           
-          <div className="flex justify-center mt-10">
-            <Link 
-              href="/busca?categoria=lancamentos" 
-              className="btn btn-outline group"
-            >
-              <span>Ver Todos os Lançamentos</span>
-              <svg className="w-4 h-4 ml-2 transform transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+          <div className="text-center mt-8 md:mt-12">
+            <Link href="/busca?categoria=lancamentos" className="btn-primary">
+              Ver Lançamentos
+              <span className="ml-2">→</span>
             </Link>
           </div>
         </div>

@@ -266,27 +266,52 @@ export default function BuscaPage() {
           </div>
         </aside>
         
-        {/* Grid de resultados */}
+        {/* Resultados */}
         <div className="lg:w-3/4">
+          {/* Ordenação */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <p className="text-sm text-gray-600 mb-2 sm:mb-0">Mostrando {resultados.length} resultados</p>
+            
+            <div className="flex items-center">
+              <label htmlFor="ordenacao" className="mr-2 text-sm text-gray-600">Ordenar por:</label>
+              <select
+                id="ordenacao"
+                value={ordenacao}
+                onChange={(e) => setOrdenacao(e.target.value as any)}
+                className="p-2 border border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="recentes">Mais recentes</option>
+                <option value="populares">Mais populares</option>
+                <option value="precoAsc">Menor preço</option>
+                <option value="precoDesc">Maior preço</option>
+              </select>
+            </div>
+          </div>
+          
           {resultados.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {resultados.map((livro, index) => (
                 <LivroCard key={livro.id} livro={livro} index={index} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-lg shadow-md">
-              <div className="mx-auto w-24 h-24 text-primary-300 mb-4">
-                <svg className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-primary-800 mb-2">Nenhum livro encontrado</h3>
-              <p className="text-primary-600 mb-6">
-                Não encontramos resultados para sua busca. Tente outros termos ou remova alguns filtros.
+            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+              <Image
+                src="/images/empty-results.svg"
+                alt="Nenhum resultado encontrado"
+                width={200}
+                height={200}
+                className="mx-auto mb-4"
+              />
+              <h3 className="text-xl font-semibold text-primary-800 mb-2">Nenhum resultado encontrado</h3>
+              <p className="text-gray-600 mb-4">
+                Não encontramos nenhum livro que corresponda aos seus filtros de busca.
               </p>
-              <Button variant="primary" onClick={limparFiltros}>
-                Limpar Filtros
+              <Button 
+                variant="primary" 
+                onClick={limparFiltros}
+              >
+                Limpar filtros
               </Button>
             </div>
           )}
