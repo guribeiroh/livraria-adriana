@@ -271,37 +271,6 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
   return data || [];
 }
 
-export async function getOrderById(orderId: string): Promise<Order | null> {
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('id', orderId)
-    .single();
-
-  if (orderError) {
-    console.error(`Erro ao buscar pedido ${orderId}:`, orderError);
-    return null;
-  }
-
-  const { data: items, error: itemsError } = await supabase
-    .from('order_items')
-    .select(`
-      *,
-      book:books(id, title, author, price, cover_image, slug)
-    `)
-    .eq('order_id', orderId);
-
-  if (itemsError) {
-    console.error(`Erro ao buscar itens do pedido ${orderId}:`, itemsError);
-    return order;
-  }
-
-  return {
-    ...order,
-    items: items || []
-  };
-}
-
 // Funções para gerenciar lista de desejos
 export async function addToWishlist(userId: string, bookId: string): Promise<boolean> {
   const { error } = await supabase
