@@ -87,7 +87,7 @@ a:hover {
   }
   
   .btn-secondary {
-    @apply bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800 py-2 px-4;
+    @apply bg-secondary-600 text-white hover:bg-secondary-600 active:bg-secondary-600 py-2 px-4;
   }
   
   .btn-accent {
