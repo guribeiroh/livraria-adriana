@@ -20,10 +20,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md py-4 px-6 fixed top-0 w-full z-10">
+    <nav className="bg-primary-50 shadow-md py-4 px-6 fixed top-0 w-full z-10">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-blue-700 hover:text-blue-800 transition-colors">
-          Livraria Adriana
+        <Link href="/" className="text-2xl font-bold text-primary-700 hover:text-primary-800 transition-colors">
+          Livraria JessyKaroline
         </Link>
 
         {/* Menu para dispositivos móveis */}
@@ -43,28 +43,21 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Links para desktop */}
+        {/* Menu principal - visível em desktop */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="text-gray-700 hover:text-blue-700 transition-colors">
-            Início
-          </Link>
-          <Link href="/#categorias" className="text-gray-700 hover:text-blue-700 transition-colors">
-            Categorias
-          </Link>
-          <Link href="/lancamentos" className="text-gray-700 hover:text-blue-700 transition-colors">
-            Lançamentos
-          </Link>
-          <Link href="/sobre" className="text-gray-700 hover:text-blue-700 transition-colors">
-            Sobre
-          </Link>
-          
-          {/* Carrinho */}
+          <Link href="/busca" className="text-primary-700 hover:text-primary-800">Livros</Link>
+          <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 hover:text-primary-800">Mais Vendidos</Link>
+          <Link href="/busca?categoria=lancamentos" className="text-primary-700 hover:text-primary-800">Lançamentos</Link>
+          <Link href="/busca?categoria=promocoes" className="text-primary-700 hover:text-primary-800">Promoções</Link>
+        </div>
+
+        {/* Área de usuário e carrinho - visível em desktop */}
+        <div className="hidden md:flex items-center space-x-4">
+          {/* Botão de busca */}
           <div className="relative">
             <button 
               onClick={() => setCarrinhoAberto(!carrinhoAberto)}
-              className="flex items-center text-gray-700 hover:text-blue-700 transition-colors"
-              aria-expanded={carrinhoAberto}
-              aria-label="Abrir carrinho"
+              className="flex items-center text-primary-700 hover:text-primary-800 focus:outline-none"
             >
               <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -77,20 +70,12 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Mini carrinho */}
+            {/* Carrinho dropdown */}
             {carrinhoAberto && (
-              <div className="absolute right-0 mt-2 w-96 bg-white border rounded-lg shadow-xl p-6 z-20">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-gray-800">Seu Carrinho</h3>
-                  <button 
-                    onClick={() => setCarrinhoAberto(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                    aria-label="Fechar mini carrinho"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-xl z-20">
+                <div className="px-4 py-3 border-b border-primary-100">
+                  <h3 className="text-lg font-medium text-primary-800">Carrinho de Compras</h3>
+                  <p className="text-sm text-primary-600">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</p>
                 </div>
                 
                 {carrinho.itens.length === 0 ? (
@@ -156,70 +141,78 @@ export default function Navbar() {
             )}
           </div>
           
-          {/* Autenticação */}
-          {usuario ? (
-            <div className="relative">
-              <button 
-                onClick={() => setPerfilAberto(!perfilAberto)}
-                className="flex items-center text-gray-700 hover:text-blue-700 transition-colors"
-                aria-expanded={perfilAberto}
-              >
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
-                  {usuario.nome.charAt(0).toUpperCase()}
-                </div>
-                <span>{usuario.nome.split(' ')[0]}</span>
-                <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {perfilAberto && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-xl z-20">
-                  <div className="p-3 border-b">
-                    <p className="text-sm font-medium text-gray-900">{usuario.nome}</p>
-                    <p className="text-xs text-gray-500">{usuario.email}</p>
-                  </div>
-                  <div className="py-1">
-                    <Link
-                      href="/perfil"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          {/* Botão de perfil */}
+          <div className="relative">
+            <button
+              onClick={() => setPerfilAberto(!perfilAberto)}
+              className="flex items-center text-primary-700 hover:text-primary-800 focus:outline-none"
+            >
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
+                {usuario ? (
+                  usuario.nome.charAt(0).toUpperCase()
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a2 2 0 012 2m-4 4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4a2 2 0 012-2h10zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <span>{usuario ? usuario.nome.split(' ')[0] : 'Perfil'}</span>
+              <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Menu dropdown do perfil */}
+            {perfilAberto && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20">
+                {usuario ? (
+                  <>
+                    <div className="px-4 py-3 text-sm text-primary-800 border-b">
+                      <div className="font-medium">Olá, {usuario.nome}</div>
+                      <div className="text-xs">{usuario.email}</div>
+                    </div>
+                    <Link 
+                      href="/perfil" 
+                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
                       onClick={() => setPerfilAberto(false)}
                     >
                       Meu Perfil
                     </Link>
-                    <Link
-                      href="/pedidos"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    <Link 
+                      href="/perfil/pedidos" 
+                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
                       onClick={() => setPerfilAberto(false)}
                     >
                       Meus Pedidos
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
                     >
                       Sair
                     </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex space-x-4">
-              <Link 
-                href="/login" 
-                className="text-gray-700 hover:text-blue-700 transition-colors"
-              >
-                Login
-              </Link>
-              <Link 
-                href="/registro" 
-                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition-colors"
-              >
-                Cadastrar
-              </Link>
-            </div>
-          )}
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      href="/login" 
+                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
+                      onClick={() => setPerfilAberto(false)}
+                    >
+                      Entrar
+                    </Link>
+                    <Link 
+                      href="/registro" 
+                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
+                      onClick={() => setPerfilAberto(false)}
+                    >
+                      Criar Conta
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

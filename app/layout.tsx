@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Livraria Adriana",
+  title: "Livraria JessyKaroline",
   description: "Sua livraria online com os melhores títulos",
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={inter.variable}>
-      <body className="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+      <body className="bg-background text-primary-900 min-h-screen flex flex-col">
         <AuthProvider>
           <CarrinhoProvider>
             <Navbar />
