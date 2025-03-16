@@ -13,6 +13,7 @@ type FormData = {
 
 type FormErrors = {
   [key in keyof FormData]?: string;
+  form?: string;
 };
 
 export default function ContatoPage() {
