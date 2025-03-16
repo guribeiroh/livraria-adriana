@@ -56,4 +56,4 @@ export default function LivroCard({ livro }: LivroCardProps) {
       </div>
     </div>
   );
-} 
+}
