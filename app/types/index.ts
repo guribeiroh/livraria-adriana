@@ -4,6 +4,7 @@ export interface Livro {
   autor: string;
   descricao: string;
   preco: number;
+  precoOriginal?: number;
   imagemUrl: string;
   paginas: number;
   categoria: string;
