@@ -21,8 +21,8 @@ export default function DetalhesPedidoPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    status: '',
-    payment_status: '',
+    status: 'pending' as 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled',
+    payment_status: 'pending' as 'pending' | 'paid' | 'failed',
     notes: ''
   });
 
@@ -273,7 +273,7 @@ export default function DetalhesPedidoPage({ params }: PageProps) {
                 <label className="block text-sm font-medium text-gray-700">Status do Pedido</label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }))}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
                   <option value="pending">Pendente</option>
@@ -287,7 +287,7 @@ export default function DetalhesPedidoPage({ params }: PageProps) {
                 <label className="block text-sm font-medium text-gray-700">Status do Pagamento</label>
                 <select
                   value={formData.payment_status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, payment_status: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, payment_status: e.target.value as 'pending' | 'paid' | 'failed' }))}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
                   <option value="pending">Pendente</option>
