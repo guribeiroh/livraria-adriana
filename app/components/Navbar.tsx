@@ -36,37 +36,22 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`py-4 px-6 fixed top-0 w-full z-10 transition-all duration-300 ${
-      scrolled ? "bg-white shadow-md" : "bg-primary-50"
-    }`}>
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="heading-serif text-2xl text-primary-700 hover:text-primary-800 transition-colors">
-          Livraria JessyKaroline
-        </Link>
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2' : 'bg-white/80 backdrop-blur-md py-4'}`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
+            <span className="text-2xl font-bold text-primary-800">
+              Livraria<span className="text-accent-500">JessyKaroline</span>
+            </span>
+          </Link>
 
-        {/* Menu para dispositivos móveis */}
-        <div className="md:hidden flex items-center gap-4">
-          <button 
-            onClick={() => setCarrinhoAberto(!carrinhoAberto)}
-            className="text-primary-700 focus:outline-none relative"
-            aria-label={carrinhoAberto ? "Fechar carrinho" : "Abrir carrinho"}
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            {totalItens > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {totalItens}
-              </span>
-            )}
-          </button>
-
-          <button 
+          {/* Botão de menu mobile */}
+          <button
+            className="md:hidden text-primary-800 hover:text-primary-600"
             onClick={() => setMenuAberto(!menuAberto)}
-            className="text-primary-700 focus:outline-none"
-            aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {menuAberto ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -74,281 +59,187 @@ export default function Navbar() {
               )}
             </svg>
           </button>
-        </div>
 
-        {/* Menu principal - visível em desktop */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">Livros</Link>
-          <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">Mais Vendidos</Link>
-          <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">Lançamentos</Link>
-          <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">Promoções</Link>
-        </div>
-
-        {/* Área de usuário e carrinho - visível em desktop */}
-        <div className="hidden md:flex items-center space-x-4">
-          {/* Botão de busca */}
-          <div className="relative">
-            <button 
-              onClick={() => setCarrinhoAberto(!carrinhoAberto)}
-              className="flex items-center text-primary-700 hover:text-primary-800 focus:outline-none"
-            >
-              <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span className="mr-1">Carrinho</span>
-              {totalItens > 0 && (
-                <span className="bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItens}
-                </span>
-              )}
-            </button>
-
-            {/* Carrinho dropdown */}
-            {carrinhoAberto && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-xl z-20">
-                <div className="px-4 py-3 border-b border-primary-100">
-                  <h3 className="text-lg font-medium text-primary-800">Carrinho de Compras</h3>
-                  <p className="text-sm text-primary-600">{totalItens} {totalItens === 1 ? 'item' : 'itens'}</p>
-                </div>
-                
-                {carrinho.itens.length === 0 ? (
-                  <div className="text-center py-8">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p className="mt-2 text-gray-500">Seu carrinho está vazio</p>
-                    <Link 
-                      href="/" 
-                      className="mt-4 inline-block text-blue-600 hover:text-blue-800 font-medium text-sm"
-                      onClick={() => setCarrinhoAberto(false)}
-                    >
-                      Comece a adicionar produtos
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    <ul className="max-h-60 overflow-y-auto divide-y divide-gray-200">
-                      {carrinho.itens.map((item) => (
-                        <li key={item.livro.id} className="py-3">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded overflow-hidden relative">
-                              <img 
-                                src={item.livro.imagemUrl} 
-                                alt={item.livro.titulo}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="ml-4 flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{item.livro.titulo}</h4>
-                              <p className="text-sm text-gray-500">{item.quantidade} x R${item.livro.preco.toFixed(2)}</p>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex justify-between font-medium text-gray-900">
-                        <span>Total:</span>
-                        <span>R${carrinho.total.toFixed(2)}</span>
-                      </div>
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        <Link 
-                          href="/carrinho" 
-                          className="bg-gray-100 text-gray-800 text-center py-2 px-4 rounded hover:bg-gray-200 transition-colors"
-                          onClick={() => setCarrinhoAberto(false)}
-                        >
-                          Ver Carrinho
-                        </Link>
-                        <Link 
-                          href="/checkout" 
-                          className="bg-blue-600 text-white text-center py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-                          onClick={() => setCarrinhoAberto(false)}
-                        >
-                          Finalizar
-                        </Link>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+          {/* Menu principal - visível em desktop */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">Livros</Link>
+            <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">Mais Vendidos</Link>
+            <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">Lançamentos</Link>
+            <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">Promoções</Link>
+            <Link href="/sobre" className="text-primary-700 font-medium hover:text-primary-800">Sobre</Link>
+            <Link href="/contato" className="text-primary-700 font-medium hover:text-primary-800">Contato</Link>
           </div>
-          
-          {/* Botão de perfil */}
-          <div className="relative">
-            <button
-              onClick={() => setPerfilAberto(!perfilAberto)}
-              className="flex items-center text-primary-700 hover:text-primary-800 focus:outline-none"
-            >
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
-                {usuario ? (
-                  usuario.nome.charAt(0).toUpperCase()
-                ) : (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a2 2 0 012 2m-4 4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4a2 2 0 012-2h10zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-              <span>{usuario ? usuario.nome.split(' ')[0] : 'Perfil'}</span>
-              <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+
+          {/* Área de usuário e carrinho - visível em desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Botão de busca */}
+            <Link href="/busca" className="text-primary-700 hover:text-primary-800">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </button>
-            
-            {/* Menu dropdown do perfil */}
-            {perfilAberto && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20">
+            </Link>
+
+            {/* Botão de carrinho */}
+            <div className="relative">
+              <button
+                className="text-primary-700 hover:text-primary-800 relative"
+                onClick={() => setCarrinhoAberto(!carrinhoAberto)}
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                {totalItens > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-accent-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {totalItens}
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown do carrinho */}
+              {carrinhoAberto && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg overflow-hidden z-50">
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-primary-800 mb-2">Seu Carrinho</h3>
+                    {carrinho.itens.length === 0 ? (
+                      <p className="text-primary-600">Seu carrinho está vazio.</p>
+                    ) : (
+                      <>
+                        <ul className="max-h-40 overflow-y-auto mb-4">
+                          {carrinho.itens.map(item => (
+                            <li key={item.id} className="flex items-center py-2 border-b">
+                              <span className="flex-1 text-sm">{item.titulo}</span>
+                              <span className="text-sm text-primary-600">{item.quantidade}x</span>
+                              <span className="text-sm font-medium ml-2">R${item.preco.toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="flex justify-between items-center font-semibold mb-4">
+                          <span>Total:</span>
+                          <span>R${carrinho.total.toFixed(2)}</span>
+                        </div>
+                        <Link 
+                          href="/checkout"
+                          className="block w-full bg-primary-600 text-white text-center py-2 rounded-md hover:bg-primary-700 transition"
+                        >
+                          Finalizar Compra
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Área de usuário */}
+            <div className="relative">
+              <button
+                className="text-primary-700 hover:text-primary-800"
+                onClick={() => setPerfilAberto(!perfilAberto)}
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+
+              {/* Dropdown do perfil */}
+              {perfilAberto && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-50">
+                  <div className="p-2">
+                    {usuario ? (
+                      <>
+                        <div className="px-4 py-2 text-sm text-primary-800 border-b">
+                          <div className="font-semibold">Olá, {usuario.nome}</div>
+                          <div className="text-primary-600">{usuario.email}</div>
+                        </div>
+                        <Link href="/perfil" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Meu Perfil</Link>
+                        <Link href="/pedidos" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Meus Pedidos</Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Sair
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/login" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Entrar</Link>
+                        <Link href="/registro" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Criar Conta</Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Menu mobile */}
+        {menuAberto && (
+          <div className="md:hidden mt-4 pb-4">
+            <nav className="flex flex-col space-y-2">
+              <Link href="/busca" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Livros</Link>
+              <Link href="/busca?categoria=mais-vendidos" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Mais Vendidos</Link>
+              <Link href="/busca?categoria=lancamentos" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Lançamentos</Link>
+              <Link href="/busca?categoria=promocoes" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Promoções</Link>
+              <Link href="/sobre" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Sobre</Link>
+              <Link href="/contato" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Contato</Link>
+              <div className="border-t pt-2 mt-2 space-y-2">
+                <Link href="/busca" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Buscar
+                </Link>
+                <Link href="/checkout" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Carrinho
+                  {totalItens > 0 && (
+                    <span className="ml-2 bg-accent-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {totalItens}
+                    </span>
+                  )}
+                </Link>
                 {usuario ? (
                   <>
-                    <div className="px-4 py-3 text-sm text-primary-800 border-b">
-                      <div className="font-medium">Olá, {usuario.nome}</div>
-                      <div className="text-xs">{usuario.email}</div>
-                    </div>
-                    <Link 
-                      href="/perfil" 
-                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
-                      onClick={() => setPerfilAberto(false)}
-                    >
+                    <Link href="/perfil" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                       Meu Perfil
-                    </Link>
-                    <Link 
-                      href="/perfil/pedidos" 
-                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
-                      onClick={() => setPerfilAberto(false)}
-                    >
-                      Meus Pedidos
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
+                      className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-md"
                     >
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
                       Sair
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link 
-                      href="/login" 
-                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
-                      onClick={() => setPerfilAberto(false)}
-                    >
+                    <Link href="/login" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
                       Entrar
                     </Link>
-                    <Link 
-                      href="/registro" 
-                      className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50 hover:text-primary-800"
-                      onClick={() => setPerfilAberto(false)}
-                    >
+                    <Link href="/registro" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
                       Criar Conta
                     </Link>
                   </>
                 )}
               </div>
-            )}
+            </nav>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* Menu móvel expandido */}
-      {menuAberto && (
-        <div className="md:hidden mt-4 pt-4 border-t">
-          <Link 
-            href="/" 
-            className="block py-2 text-gray-700 hover:text-blue-700"
-            onClick={() => setMenuAberto(false)}
-          >
-            Início
-          </Link>
-          <Link 
-            href="/#categorias" 
-            className="block py-2 text-gray-700 hover:text-blue-700"
-            onClick={() => setMenuAberto(false)}
-          >
-            Categorias
-          </Link>
-          <Link 
-            href="/lancamentos" 
-            className="block py-2 text-gray-700 hover:text-blue-700"
-            onClick={() => setMenuAberto(false)}
-          >
-            Lançamentos
-          </Link>
-          <Link 
-            href="/sobre" 
-            className="block py-2 text-gray-700 hover:text-blue-700"
-            onClick={() => setMenuAberto(false)}
-          >
-            Sobre
-          </Link>
-          <Link
-            href="/carrinho"
-            className="flex items-center py-2 text-gray-700 hover:text-blue-700"
-            onClick={() => setMenuAberto(false)}
-          >
-            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="mr-1">Carrinho</span>
-            {totalItens > 0 && (
-              <span className="bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center ml-1">
-                {totalItens}
-              </span>
-            )}
-          </Link>
-          
-          {/* Autenticação para dispositivos móveis */}
-          {usuario ? (
-            <>
-              <div className="py-2 flex items-center border-t mt-2">
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
-                  {usuario.nome.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{usuario.nome}</p>
-                  <p className="text-xs text-gray-500">{usuario.email}</p>
-                </div>
-              </div>
-              <Link
-                href="/perfil"
-                className="block py-2 text-gray-700 hover:text-blue-700"
-                onClick={() => setMenuAberto(false)}
-              >
-                Meu Perfil
-              </Link>
-              <Link
-                href="/pedidos"
-                className="block py-2 text-gray-700 hover:text-blue-700"
-                onClick={() => setMenuAberto(false)}
-              >
-                Meus Pedidos
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left py-2 text-red-600 hover:text-red-800"
-              >
-                Sair
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col space-y-2 mt-2 pt-2 border-t">
-              <Link 
-                href="/login" 
-                className="block py-2 text-gray-700 hover:text-blue-700"
-                onClick={() => setMenuAberto(false)}
-              >
-                Login
-              </Link>
-              <Link 
-                href="/registro" 
-                className="block py-2 bg-blue-600 text-white px-4 rounded hover:bg-blue-700 transition-colors text-center"
-                onClick={() => setMenuAberto(false)}
-              >
-                Cadastrar
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-    </nav>
+    </header>
   );
 } 
