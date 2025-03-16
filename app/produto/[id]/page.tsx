@@ -8,6 +8,7 @@ import { useCarrinho } from '../../context/CarrinhoContext';
 import Link from 'next/link';
 import Button from '../../components/Button';
 import Badge from '../../components/Badge';
+import LivroCard from '../../components/LivroCard';
 
 export default function ProdutoPage({ params }: { params: { id: string } }) {
   const [livro, setLivro] = useState<Livro | null>(null);
