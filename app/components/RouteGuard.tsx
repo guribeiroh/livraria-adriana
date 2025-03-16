@@ -23,8 +23,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
         return;
       }
       
-      // Removida a verificação de permissão de administrador
-      // Qualquer usuário autenticado pode acessar rotas protegidas
+      // Verificar se rota requer admin e usuário tem permissão
+      if (requireAdmin && !isAdmin()) {
+        router.push('/');
+        return;
+      }
     }
   }, [usuario, carregando, pathname, router, requireAdmin, isAdmin]);
 
@@ -38,8 +41,12 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
   }
 
   // Se o usuário não estiver autenticado, não renderizar nada
-  // Removida a verificação de permissão de administrador
   if (!usuario) {
+    return null;
+  }
+  
+  // Verificar permissão se necessário
+  if (requireAdmin && !isAdmin()) {
     return null;
   }
 
