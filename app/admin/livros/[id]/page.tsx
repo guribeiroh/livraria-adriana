@@ -117,11 +117,11 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.categoria = 'A categoria é obrigatória';
     }
     
-    if (formData.paginas <= 0) {
+    if (formData.paginas === undefined || formData.paginas <= 0) {
       newErrors.paginas = 'O número de páginas deve ser maior que zero';
     }
     
-    if (formData.preco <= 0) {
+    if (formData.preco === undefined || formData.preco <= 0) {
       newErrors.preco = 'O preço deve ser maior que zero';
     }
     
