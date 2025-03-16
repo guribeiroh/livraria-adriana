@@ -4,14 +4,17 @@ import Link from 'next/link';
 import { useCarrinho } from '../context/CarrinhoContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const { carrinho } = useCarrinho();
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, isAdmin } = useAuth();
   const [menuAberto, setMenuAberto] = useState(false);
   const [carrinhoAberto, setCarrinhoAberto] = useState(false);
   const [perfilAberto, setPerfilAberto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   const totalItens = carrinho.itens.reduce((total, item) => total + item.quantidade, 0);
 
@@ -30,9 +33,13 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setPerfilAberto(false);
+  };
+
+  const toggleMenu = () => {
+    setMenuAberto(!menuAberto);
   };
 
   return (
@@ -41,15 +48,20 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-primary-800">
-              Livraria<span className="text-accent-500">JessyKaroline</span>
-            </span>
+            <Image 
+              src="/logo.png" 
+              alt="Logo da Livraria" 
+              width={40} 
+              height={40} 
+              className="w-auto h-10"
+            />
+            <span className="ml-2 text-xl font-bold text-primary-700">Livraria Online</span>
           </Link>
 
           {/* Botão de menu mobile */}
           <button
             className="md:hidden text-primary-800 hover:text-primary-600"
-            onClick={() => setMenuAberto(!menuAberto)}
+            onClick={toggleMenu}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {menuAberto ? (
@@ -62,6 +74,30 @@ export default function Navbar() {
 
           {/* Menu principal - visível em desktop */}
           <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              href="/" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/' 
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Início
+            </Link>
+            <Link 
+              href="/sobre" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/sobre' 
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Sobre
+            </Link>
+            <Link 
+              href="/contato" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/contato' 
             <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">Livros</Link>
             <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">Mais Vendidos</Link>
             <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">Lançamentos</Link>

@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase URL ou Anon Key ausente. Verifique suas variáveis de ambiente.');
+}
+
 // Criar o cliente Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -15,6 +19,48 @@ export async function getCurrentUser() {
     console.error('Erro ao obter usuário atual:', error);
     return null;
   }
+}
+
+// Funções de autenticação
+export async function signInWithEmail(email: string, password: string) {
+  return await supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function signUpWithEmail(email: string, password: string, userData: object) {
+  return await supabase.auth.signUp({ 
+    email, 
+    password,
+    options: { data: userData }
+  });
+}
+
+export async function signOut() {
+  return await supabase.auth.signOut();
+}
+
+export async function resetPassword(email: string) {
+  return await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/redefinir-senha`,
+  });
+}
+
+export async function updatePassword(newPassword: string) {
+  return await supabase.auth.updateUser({ password: newPassword });
+}
+
+// Função para verificar se o usuário tem permissão de administrador
+export async function isUserAdmin(userId: string) {
+  if (!userId) return false;
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+    
+  if (error || !data) return false;
+  
+  return data.role === 'admin';
 }
 
 // Tipos para as entidades do banco de dados
