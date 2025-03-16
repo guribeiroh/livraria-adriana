@@ -125,7 +125,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.preco = 'O preço deve ser maior que zero';
     }
     
-    if (formData.precoOriginal && formData.precoOriginal <= formData.preco) {
+    if (formData.precoOriginal && formData.preco !== undefined && formData.precoOriginal <= formData.preco) {
       newErrors.precoOriginal = 'O preço original deve ser maior que o preço atual';
     }
     
