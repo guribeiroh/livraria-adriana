@@ -38,9 +38,13 @@ export default function BookCard({
       titulo: title,
       autor: author,
       preco: price,
-      quantidade: 1,
-      imagem: coverImage,
-      slug
+      descricao: '', // Adicionando campos obrigatórios que faltavam
+      imagemUrl: coverImage,
+      paginas: 0,
+      categoria: category,
+      isbn: '',
+      anoPublicacao: 0,
+      disponivel: true
     });
   };
   
