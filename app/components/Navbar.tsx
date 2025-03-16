@@ -2,14 +2,22 @@
 
 import Link from 'next/link';
 import { useCarrinho } from '../context/CarrinhoContext';
+import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
 export default function Navbar() {
   const { carrinho } = useCarrinho();
+  const { usuario, logout } = useAuth();
   const [menuAberto, setMenuAberto] = useState(false);
   const [carrinhoAberto, setCarrinhoAberto] = useState(false);
+  const [perfilAberto, setPerfilAberto] = useState(false);
 
   const totalItens = carrinho.itens.reduce((total, item) => total + item.quantidade, 0);
+
+  const handleLogout = () => {
+    logout();
+    setPerfilAberto(false);
+  };
 
   return (
     <nav className="bg-white shadow-md py-4 px-6 fixed top-0 w-full z-10">
@@ -49,6 +57,8 @@ export default function Navbar() {
           <Link href="/sobre" className="text-gray-700 hover:text-blue-700 transition-colors">
             Sobre
           </Link>
+          
+          {/* Carrinho */}
           <div className="relative">
             <button 
               onClick={() => setCarrinhoAberto(!carrinhoAberto)}
@@ -145,6 +155,71 @@ export default function Navbar() {
               </div>
             )}
           </div>
+          
+          {/* Autenticação */}
+          {usuario ? (
+            <div className="relative">
+              <button 
+                onClick={() => setPerfilAberto(!perfilAberto)}
+                className="flex items-center text-gray-700 hover:text-blue-700 transition-colors"
+                aria-expanded={perfilAberto}
+              >
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
+                  {usuario.nome.charAt(0).toUpperCase()}
+                </div>
+                <span>{usuario.nome.split(' ')[0]}</span>
+                <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {perfilAberto && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-xl z-20">
+                  <div className="p-3 border-b">
+                    <p className="text-sm font-medium text-gray-900">{usuario.nome}</p>
+                    <p className="text-xs text-gray-500">{usuario.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      href="/perfil"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setPerfilAberto(false)}
+                    >
+                      Meu Perfil
+                    </Link>
+                    <Link
+                      href="/pedidos"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setPerfilAberto(false)}
+                    >
+                      Meus Pedidos
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex space-x-4">
+              <Link 
+                href="/login" 
+                className="text-gray-700 hover:text-blue-700 transition-colors"
+              >
+                Login
+              </Link>
+              <Link 
+                href="/registro" 
+                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition-colors"
+              >
+                Cadastrar
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -194,6 +269,58 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+          
+          {/* Autenticação para dispositivos móveis */}
+          {usuario ? (
+            <>
+              <div className="py-2 flex items-center border-t mt-2">
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
+                  {usuario.nome.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{usuario.nome}</p>
+                  <p className="text-xs text-gray-500">{usuario.email}</p>
+                </div>
+              </div>
+              <Link
+                href="/perfil"
+                className="block py-2 text-gray-700 hover:text-blue-700"
+                onClick={() => setMenuAberto(false)}
+              >
+                Meu Perfil
+              </Link>
+              <Link
+                href="/pedidos"
+                className="block py-2 text-gray-700 hover:text-blue-700"
+                onClick={() => setMenuAberto(false)}
+              >
+                Meus Pedidos
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left py-2 text-red-600 hover:text-red-800"
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col space-y-2 mt-2 pt-2 border-t">
+              <Link 
+                href="/login" 
+                className="block py-2 text-gray-700 hover:text-blue-700"
+                onClick={() => setMenuAberto(false)}
+              >
+                Login
+              </Link>
+              <Link 
+                href="/registro" 
+                className="block py-2 bg-blue-600 text-white px-4 rounded hover:bg-blue-700 transition-colors text-center"
+                onClick={() => setMenuAberto(false)}
+              >
+                Cadastrar
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </nav>
