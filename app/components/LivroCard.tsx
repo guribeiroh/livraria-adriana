@@ -16,9 +16,21 @@ interface LivroCardProps {
 export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
   const { adicionarItem } = useCarrinho();
   const [isHovered, setIsHovered] = useState(false);
+  const [botaoAnimado, setBotaoAnimado] = useState(false);
   
   // Atraso de animação baseado no índice
   const animationDelay = `${index * 100}ms`;
+  
+  const handleAdicionarAoCarrinho = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    adicionarItem(livro);
+    
+    // Ativar animação do botão
+    setBotaoAnimado(true);
+    setTimeout(() => {
+      setBotaoAnimado(false);
+    }, 600);
+  };
   
   return (
     <div 
@@ -100,9 +112,9 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
           <Button
             variant="primary" 
             size="sm"
-            onClick={() => adicionarItem(livro)}
+            onClick={handleAdicionarAoCarrinho}
             disabled={!livro.disponivel}
-            className="rounded-full"
+            className={`rounded-full ${botaoAnimado ? 'animate-cart-pulse' : ''}`}
             leftIcon={
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

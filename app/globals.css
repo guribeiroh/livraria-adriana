@@ -87,7 +87,7 @@ a:hover {
   }
   
   .btn-secondary {
-    @apply bg-secondary-500 text-white hover:bg-secondary-600 active:bg-secondary-400 py-2 px-4;
+    @apply bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800 py-2 px-4;
   }
   
   .btn-accent {
@@ -95,15 +95,15 @@ a:hover {
   }
   
   .btn-outline {
-    @apply border border-primary-600 text-primary-600 hover:bg-primary-50 active:bg-primary-100 py-2 px-4;
+    @apply border border-primary-600 text-primary-600 bg-transparent hover:bg-primary-50 active:bg-primary-100 py-2 px-4;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-card transition-all duration-300 hover:shadow-elevated overflow-hidden;
+    @apply bg-white rounded-lg shadow-md overflow-hidden;
   }
   
   .card-body {
-    @apply p-5;
+    @apply p-4;
   }
   
   .input {
@@ -128,6 +128,54 @@ a:hover {
   
   .gradient-text {
     @apply bg-gradient-to-r from-primary-600 to-primary-500 inline-block text-transparent bg-clip-text;
+  }
+  
+  /* Animação de fade-in */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+  }
+  
+  /* Animação pulsante para o botão de adicionar ao carrinho */
+  .animate-cart-pulse {
+    animation: cartPulse 0.6s ease-in-out;
+  }
+  
+  /* Animação da barra de progresso da notificação */
+  .animate-progress {
+    animation: progress 3s linear forwards;
+    width: 100%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cartPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
   }
 }
 

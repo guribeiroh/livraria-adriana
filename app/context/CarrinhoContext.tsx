@@ -9,6 +9,9 @@ interface CarrinhoContextType {
   removerItem: (livroId: string) => void;
   atualizarQuantidade: (livroId: string, quantidade: number) => void;
   limparCarrinho: () => void;
+  ultimoItemAdicionado: ItemCarrinho | null;
+  itemAdicionadoRecentemente: boolean;
+  fecharNotificacao: () => void;
 }
 
 const CarrinhoContext = createContext<CarrinhoContextType | undefined>(undefined);
@@ -30,6 +33,9 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
     itens: [],
     total: 0
   });
+  
+  const [ultimoItemAdicionado, setUltimoItemAdicionado] = useState<ItemCarrinho | null>(null);
+  const [itemAdicionadoRecentemente, setItemAdicionadoRecentemente] = useState(false);
 
   // Carregar carrinho do localStorage quando o componente montar
   useEffect(() => {
@@ -61,6 +67,17 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
       total: novoTotal
     }));
   }, [carrinho.itens]);
+  
+  // Limpar notificação após alguns segundos
+  useEffect(() => {
+    if (itemAdicionadoRecentemente) {
+      const timeout = setTimeout(() => {
+        setItemAdicionadoRecentemente(false);
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [itemAdicionadoRecentemente]);
 
   const adicionarItem = (livro: Livro) => {
     setCarrinho(prevCarrinho => {
@@ -68,23 +85,29 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
         item => item.livro.id === livro.id
       );
 
+      let novosItens;
+      let itemAtualizado;
+
       if (itemExistente) {
         // Se o item já existe, incrementa a quantidade
-        return {
-          ...prevCarrinho,
-          itens: prevCarrinho.itens.map(item =>
-            item.livro.id === livro.id
-              ? { ...item, quantidade: item.quantidade + 1 }
-              : item
-          )
-        };
+        itemAtualizado = { ...itemExistente, quantidade: itemExistente.quantidade + 1 };
+        novosItens = prevCarrinho.itens.map(item =>
+          item.livro.id === livro.id ? itemAtualizado : item
+        );
       } else {
         // Se o item não existe, adiciona ao carrinho
-        return {
-          ...prevCarrinho,
-          itens: [...prevCarrinho.itens, { livro, quantidade: 1 }]
-        };
+        itemAtualizado = { livro, quantidade: 1 };
+        novosItens = [...prevCarrinho.itens, itemAtualizado];
       }
+      
+      // Atualizar último item adicionado e ativar a notificação
+      setUltimoItemAdicionado(itemAtualizado);
+      setItemAdicionadoRecentemente(true);
+      
+      return {
+        ...prevCarrinho,
+        itens: novosItens
+      };
     });
   };
 
@@ -112,6 +135,10 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
   const limparCarrinho = () => {
     setCarrinho({ itens: [], total: 0 });
   };
+  
+  const fecharNotificacao = () => {
+    setItemAdicionadoRecentemente(false);
+  };
 
   return (
     <CarrinhoContext.Provider
@@ -120,7 +147,10 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
         adicionarItem,
         removerItem,
         atualizarQuantidade,
-        limparCarrinho
+        limparCarrinho,
+        ultimoItemAdicionado,
+        itemAdicionadoRecentemente,
+        fecharNotificacao
       }}
     >
       {children}

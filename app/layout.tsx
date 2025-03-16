@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import BackToTop from "./components/BackToTop";
+import NotificacaoCarrinho from './components/NotificacaoCarrinho';
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -47,6 +48,7 @@ export default function RootLayout({
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
             
             <Navbar />
+            <NotificacaoCarrinho />
             <main className="pt-20 flex-grow">
               {children}
             </main>
