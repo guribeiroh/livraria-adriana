@@ -72,7 +72,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
             {/* Imagem do livro */}
             <div className="flex flex-col space-y-4">
-              <div className="relative h-[500px] w-full bg-primary-50 rounded-lg overflow-hidden border border-primary-100">
+              <div className="relative w-full aspect-[5/8] max-w-md mx-auto bg-primary-50 rounded-lg overflow-hidden border border-primary-100">
                 <Image
                   src={livro.imagemUrl}
                   alt={livro.titulo}
@@ -291,7 +291,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
               {livrosRelacionados.map(livroRel => (
                 <Link href={`/produto/${livroRel.id}`} key={livroRel.id} className="group">
                   <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg">
-                    <div className="relative h-60 bg-primary-50">
+                    <div className="relative aspect-[5/8] w-full bg-primary-50">
                       <Image 
                         src={livroRel.imagemUrl} 
                         alt={livroRel.titulo}

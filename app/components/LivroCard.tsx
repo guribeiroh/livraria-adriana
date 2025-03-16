@@ -36,12 +36,12 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
         )}
         
         <Link href={`/produto/${livro.id}`} className="block">
-          <div className="relative h-72 w-full bg-primary-50 overflow-hidden">
+          <div className="relative aspect-[5/8] w-full bg-primary-50 overflow-hidden">
             <Image 
-              src={livro.imagemUrl || "https://via.placeholder.com/300x400?text=Sem+Imagem"}
+              src={livro.imagemUrl || "https://via.placeholder.com/625x998?text=Sem+Imagem"}
               alt={livro.titulo}
               fill
-              style={{ objectFit: 'cover' }}
+              style={{ objectFit: 'contain' }}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={`transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
             />
