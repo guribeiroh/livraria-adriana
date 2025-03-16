@@ -100,7 +100,7 @@ export default function UpsellPage() {
           autor: livro.author,
           descricao: livro.description || '',
           preco: livro.price,
-          precoOriginal: livro.original_price,
+          precoOriginal: livro.original_price || undefined,
           imagemUrl: livro.cover_image || '',
           paginas: livro.pages || 0,
           categoria: livro.category?.name || '',
