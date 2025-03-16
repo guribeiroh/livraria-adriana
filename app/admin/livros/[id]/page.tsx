@@ -161,6 +161,11 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.price = 'O preço deve ser maior que zero';
     }
     
+    // Validar estoque
+    if (formData.stock === undefined || formData.stock < 0) {
+      newErrors.stock = 'A quantidade em estoque deve ser um número não negativo';
+    }
+    
     // Descrição e categoria são consideradas opcionais
     
     // ISBN é opcional
@@ -476,6 +481,32 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
               {errors.original_price && (
                 <p className="mt-1 text-sm text-error-600">{errors.original_price}</p>
               )}
+            </div>
+
+            {/* Estoque */}
+            <div className="mt-4">
+              <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+                Estoque
+              </label>
+              <div className="mt-1">
+                <input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  min="0"
+                  value={formData.stock || 0}
+                  onChange={handleChange}
+                  className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errors.stock ? 'border-red-500' : ''
+                  }`}
+                />
+                {errors.stock && (
+                  <p className="mt-2 text-sm text-red-600">{errors.stock}</p>
+                )}
+                <p className="mt-2 text-sm text-gray-500">
+                  Quantidade de livros disponíveis em estoque
+                </p>
+              </div>
             </div>
 
             {/* Imagem */}
