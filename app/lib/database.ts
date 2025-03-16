@@ -389,7 +389,13 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
     console.log(`Atualizando livro ${id} com dados:`, updates);
     
     // Remover propriedades que não existem na tabela do banco ou possam causar problemas
-    const { category, ...bookData } = updates as any;
+    const { 
+      category, 
+      created_at, 
+      updated_at, 
+      id: bookId, 
+      ...bookData 
+    } = updates as any;
     
     // Limitar o tamanho da imagem se for muito grande
     if (bookData.cover_image && bookData.cover_image.length > 300000) {
@@ -446,7 +452,13 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
     console.log('Criando novo livro com dados:', book);
     
     // Remover propriedades que não existem na tabela do banco
-    const { category, ...bookData } = book as any;
+    const { 
+      category, 
+      created_at, 
+      updated_at, 
+      id,
+      ...bookData 
+    } = book as any;
     
     // Limitar o tamanho da imagem se for muito grande
     if (bookData.cover_image && bookData.cover_image.length > 300000) {
@@ -461,6 +473,8 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
     if (bookData.publication_year) bookData.publication_year = Number(bookData.publication_year);
     if (bookData.stock) bookData.stock = Number(bookData.stock);
     
+    console.log('Dados finais para criação:', bookData);
+    
     const { data, error } = await supabase
       .from('books')
       .insert(bookData)
@@ -469,6 +483,7 @@ export async function createBook(book: Partial<Book>): Promise<Book | null> {
 
     if (error) {
       console.error('Erro ao criar livro:', error);
+      console.error('Detalhes do erro:', JSON.stringify(error));
       return null;
     }
 
