@@ -92,37 +92,37 @@ export type User = {
   updated_at: string;
 };
 
-export type Category = {
+export interface Category {
   id: string;
   name: string;
-  description: string | null;
   slug: string;
-  created_at: string;
-  updated_at: string;
-};
+  description: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export type Book = {
+export interface Book {
   id: string;
   title: string;
   author: string;
-  description: string | null;
   price: number;
-  original_price: number | null;
-  isbn: string | null;
-  publication_year: number | null;
-  pages: number | null;
-  stock: number;
-  cover_image: string | null;
+  description: string | null;
+  image_url: string | null;
   category_id: string | null;
-  is_featured: boolean;
-  is_bestseller: boolean;
-  is_new: boolean;
-  is_active: boolean;
+  category_name?: string;
   slug: string;
-  created_at: string;
-  updated_at: string;
-  category?: Category;
-};
+  pages?: number;
+  isbn?: string;
+  publisher?: string;
+  publication_year?: number;
+  language?: string;
+  format?: string;
+  stock?: number;
+  featured?: boolean;
+  discount_percentage?: number;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export type Review = {
   id: string;
@@ -134,32 +134,33 @@ export type Review = {
   user?: User;
 };
 
-export type Order = {
+export interface Order {
   id: string;
   user_id: string | null;
-  status: string;
-  total: number;
-  shipping_address: string | null;
-  shipping_city: string | null;
-  shipping_state: string | null;
-  shipping_zipcode: string | null;
-  payment_method: string | null;
-  tracking_number: string | null;
-  created_at: string;
-  updated_at: string;
-  items?: OrderItem[];
-  user?: User;
-};
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  total_amount: number;
+  shipping_address?: string;
+  payment_method?: string;
+  payment_status?: 'pending' | 'paid' | 'failed';
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  order_items?: OrderItem[];
+}
 
-export type OrderItem = {
+export interface OrderItem {
   id: string;
   order_id: string;
   book_id: string;
   quantity: number;
-  price_at_purchase: number;
-  created_at: string;
+  unit_price: number;
   book?: Book;
-};
+  created_at?: string;
+  updated_at?: string;
+}
 
 export type Wishlist = {
   id: string;

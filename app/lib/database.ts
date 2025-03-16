@@ -4,37 +4,46 @@ import { slugify } from './utils';
 
 // Funções para obter dados
 export async function getCategories(): Promise<Category[]> {
+  console.log('[DATABASE] Buscando todas as categorias do banco de dados...');
   try {
-    const { data, error } = await supabase
+    const { data: categories, error } = await supabase
       .from('categories')
       .select('*')
       .order('name');
 
     if (error) {
-      console.error('Erro ao buscar categorias:', error);
+      console.error('[DATABASE] Erro ao buscar categorias:', error);
       return [];
     }
 
-    return data || [];
+    console.log(`[DATABASE] Encontradas ${categories.length} categorias.`);
+    return categories || [];
   } catch (err) {
-    console.error('Erro não tratado ao buscar categorias:', err);
+    console.error('[DATABASE] Erro ao buscar categorias:', err);
     return [];
   }
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  console.log(`[DATABASE] Buscando categoria com slug: ${slug}`);
+  
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
-  if (error) {
-    console.error(`Erro ao buscar categoria com slug ${slug}:`, error);
+    if (error) {
+      console.error('[DATABASE] Erro ao buscar categoria por slug:', error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao buscar categoria por slug:', err);
     return null;
   }
-
-  return data;
 }
 
 export async function getBooks(limit: number = 20, offset: number = 0): Promise<Book[]> {
@@ -526,5 +535,213 @@ export async function getBookById(id: string): Promise<Book | null> {
   } catch (err) {
     console.error(`Erro não tratado ao buscar livro com ID ${id}:`, err);
     return null;
+  }
+}
+
+export async function createCategory(categoryData: any): Promise<Category | null> {
+  console.log('[DATABASE] Criando nova categoria:', categoryData.name);
+  
+  try {
+    // Garantir que temos um slug
+    if (!categoryData.slug) {
+      categoryData.slug = slugify(categoryData.name);
+    }
+    
+    const { data, error } = await supabase
+      .from('categories')
+      .insert(categoryData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[DATABASE] Erro ao criar categoria:', error);
+      return null;
+    }
+
+    console.log('[DATABASE] Categoria criada com sucesso:', data);
+    return data;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao criar categoria:', err);
+    return null;
+  }
+}
+
+export async function updateCategory(id: string, updates: any): Promise<Category | null> {
+  console.log(`[DATABASE] Atualizando categoria ${id}:`, updates);
+  
+  try {
+    // Garantir que temos um slug válido
+    if (!updates.slug && updates.name) {
+      updates.slug = slugify(updates.name);
+    }
+    
+    const { data, error } = await supabase
+      .from('categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[DATABASE] Erro ao atualizar categoria:', error);
+      return null;
+    }
+
+    console.log('[DATABASE] Categoria atualizada com sucesso:', data);
+    return data;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao atualizar categoria:', err);
+    return null;
+  }
+}
+
+export async function deleteCategory(id: string): Promise<boolean> {
+  console.log(`[DATABASE] Tentando excluir categoria ${id}`);
+  
+  try {
+    // Verificar se há livros usando esta categoria
+    const { data: books, error: booksError } = await supabase
+      .from('books')
+      .select('id')
+      .eq('category_id', id);
+      
+    if (booksError) {
+      console.error('[DATABASE] Erro ao verificar livros associados à categoria:', booksError);
+      return false;
+    }
+    
+    if (books && books.length > 0) {
+      console.error(`[DATABASE] Não é possível excluir categoria: ${books.length} livros associados`);
+      return false;
+    }
+    
+    // Excluir a categoria
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[DATABASE] Erro ao excluir categoria:', error);
+      return false;
+    }
+
+    console.log('[DATABASE] Categoria excluída com sucesso');
+    return true;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao excluir categoria:', err);
+    return false;
+  }
+}
+
+// ===== FUNÇÕES PARA PEDIDOS =====
+
+export async function getOrders() {
+  console.log('[DATABASE] Buscando todos os pedidos do banco de dados...');
+  try {
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[DATABASE] Erro ao buscar pedidos:', error);
+      return [];
+    }
+
+    console.log(`[DATABASE] Encontrados ${orders.length} pedidos.`);
+    return orders || [];
+  } catch (err) {
+    console.error('[DATABASE] Erro ao buscar pedidos:', err);
+    return [];
+  }
+}
+
+export async function getOrderById(id: string) {
+  console.log(`[DATABASE] Buscando pedido com ID: ${id}`);
+  
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(
+          *,
+          book:books(*)
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('[DATABASE] Erro ao buscar pedido:', error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao buscar pedido:', err);
+    return null;
+  }
+}
+
+export async function updateOrder(id: string, updates: any) {
+  console.log(`[DATABASE] Atualizando pedido ${id}:`, updates);
+  
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[DATABASE] Erro ao atualizar pedido:', error);
+      return null;
+    }
+
+    console.log('[DATABASE] Pedido atualizado com sucesso:', data);
+    return data;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao atualizar pedido:', err);
+    return null;
+  }
+}
+
+export async function deleteOrder(id: string) {
+  console.log(`[DATABASE] Tentando excluir pedido ${id}`);
+  
+  try {
+    // Primeiro, excluir todos os itens do pedido
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', id);
+      
+    if (itemsError) {
+      console.error('[DATABASE] Erro ao excluir itens do pedido:', itemsError);
+      return false;
+    }
+    
+    // Excluir o pedido
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[DATABASE] Erro ao excluir pedido:', error);
+      return false;
+    }
+
+    console.log('[DATABASE] Pedido excluído com sucesso');
+    return true;
+  } catch (err) {
+    console.error('[DATABASE] Erro ao excluir pedido:', err);
+    return false;
   }
 } 
