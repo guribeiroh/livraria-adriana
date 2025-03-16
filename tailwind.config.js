@@ -9,30 +9,30 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#b9e6fe',
-          300: '#7cd4fd',
-          400: '#36bffa',
-          500: '#0da2e7',
-          600: '#0284c7',
-          700: '#036aa1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          50: '#F0E9E1',  // Bege claro/off-white
+          100: '#F0E6C9', // Creme dourado
+          200: '#E5D6C5', // Variação clara do marrom rosado
+          300: '#D5BDAB', // Variação média do marrom rosado
+          400: '#C5A391', // Marrom rosado
+          500: '#B38977', // Variação escura do marrom rosado
+          600: '#A07260', // Transição para marrom médio
+          700: '#8E5F3F', // Marrom médio
+          800: '#734D33', // Variação escura do marrom médio
+          900: '#593C28', // Variação mais escura
+          950: '#402B1D', // Marrom muito escuro
         },
         accent: {
-          50: '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#f43f5e',
-          600: '#e11d48',
-          700: '#be123c',
-          800: '#9f1239',
-          900: '#881337',
-          950: '#4c0519',
+          50: '#FCF8F3',
+          100: '#F8F1E7',
+          200: '#F1E3CF',
+          300: '#E9D5B7',
+          400: '#E2C79F',
+          500: '#DAB987', // Dourado suave
+          600: '#C5A45F',
+          700: '#A68A45',
+          800: '#87702D',
+          900: '#695715',
+          950: '#4A3D0A',
         },
         secondary: {
           50: '#f8fafc',
@@ -73,7 +73,7 @@ module.exports = {
           900: '#7f1d1d',
           950: '#450a0a',
         },
-        background: '#fafaf9',
+        background: '#F0E9E1', // Bege claro/off-white como fundo padrão
       },
       fontFamily: {
         sans: ['var(--font-inter)'],
