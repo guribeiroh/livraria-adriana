@@ -11,8 +11,10 @@ type FormData = {
   mensagem: string;
 };
 
+// Corrigindo o tipo usando interseção de tipos
 type FormErrors = {
   [key in keyof FormData]?: string;
+} & {
   form?: string;
 };
 
