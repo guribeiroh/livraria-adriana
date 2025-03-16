@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Book, Category } from '../../../lib/supabase';
-import { getBookBySlug, getCategories, updateBook, createBook } from '../../../lib/database';
+import { getBookById, getCategories, updateBook, createBook } from '../../../lib/database';
 import { slugify } from '../../../lib/utils';
 
 export default function EditarLivroPage({ params }: { params: { id: string } }) {
@@ -55,7 +55,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
         
         // Se não for um novo livro, carregar dados do livro existente
         if (!isNewBook) {
-          const livro = await getBookBySlug(params.id);
+          const livro = await getBookById(params.id);
           
           if (livro) {
             setFormData({

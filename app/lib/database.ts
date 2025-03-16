@@ -80,22 +80,27 @@ export async function getBooksByCategory(categorySlug: string, limit: number = 2
 }
 
 export async function getBookBySlug(slug: string): Promise<Book | null> {
-  const { data, error } = await supabase
-    .from('books')
-    .select(`
-      *,
-      category:categories(id, name, slug)
-    `)
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        *,
+        category:categories(id, name, slug)
+      `)
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .single();
 
-  if (error) {
-    console.error(`Erro ao buscar livro com slug ${slug}:`, error);
+    if (error) {
+      console.error(`Erro ao buscar livro com slug ${slug}:`, error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error(`Erro não tratado ao buscar livro com slug ${slug}:`, err);
     return null;
   }
-
-  return data;
 }
 
 export async function searchBooks(query: string, limit: number = 20): Promise<Book[]> {
@@ -436,5 +441,28 @@ export async function deleteBook(id: string): Promise<boolean> {
   } catch (err) {
     console.error(`Erro não tratado ao deletar livro ${id}:`, err);
     return false;
+  }
+}
+
+export async function getBookById(id: string): Promise<Book | null> {
+  try {
+    const { data, error } = await supabase
+      .from('books')
+      .select(`
+        *,
+        category:categories(id, name, slug)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error(`Erro ao buscar livro com ID ${id}:`, error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error(`Erro não tratado ao buscar livro com ID ${id}:`, err);
+    return null;
   }
 } 
