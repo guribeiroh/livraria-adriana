@@ -30,12 +30,15 @@ export default function BookCard({ book, index = 0 }: BookCardProps) {
       id: book.id,
       titulo: book.title,
       autor: book.author,
+      descricao: book.description || '',
       preco: book.price,
       precoOriginal: book.original_price || undefined,
       imagemUrl: book.cover_image || '',
       disponivel: book.stock && book.stock > 0 ? true : false,
       categoria: book.category?.name || '',
       paginas: book.pages || 0,
+      isbn: book.isbn || '',
+      anoPublicacao: book.publication_year || new Date().getFullYear(),
       slug: book.slug
     };
     
