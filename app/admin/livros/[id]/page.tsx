@@ -42,7 +42,10 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     is_bestseller: false,
     is_new: true,
     stock: 0,
-    slug: ''
+    slug: '',
+    publisher: '',
+    language: '',
+    format: ''
   });
 
   // Carregar dados do livro e categorias
@@ -166,6 +169,13 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       newErrors.stock = 'A quantidade em estoque deve ser um número não negativo';
     }
     
+    // Campos opcionais, mas que devem ser validados se preenchidos
+    if (formData.publisher && !formData.publisher.trim()) {
+      newErrors.publisher = 'A editora não pode estar em branco se preenchida';
+    }
+    
+    // Campos que são selects podem ser validados se necessário
+    
     // Descrição e categoria são consideradas opcionais
     
     // ISBN é opcional
@@ -204,6 +214,9 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
         ...(formData.is_featured !== undefined ? { is_featured: formData.is_featured } : {}),
         ...(formData.is_new !== undefined ? { is_new: formData.is_new } : {}),
         ...(formData.cover_image ? { cover_image: formData.cover_image } : {}),
+        ...(formData.publisher ? { publisher: formData.publisher } : {}),
+        ...(formData.language ? { language: formData.language } : {}),
+        ...(formData.format ? { format: formData.format } : {}),
         // Sempre incluir um slug, se disponível ou gerar a partir do título
         slug: formData.slug || slugify(formData.title || '')
       };
@@ -335,6 +348,74 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
               {errors.isbn && (
                 <p className="mt-1 text-sm text-error-600">{errors.isbn}</p>
               )}
+            </div>
+
+            {/* Editora */}
+            <div>
+              <label htmlFor="publisher" className="block text-sm font-medium text-gray-700 mb-1">
+                Editora
+                <span className="text-gray-500 text-xs ml-1">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                id="publisher"
+                name="publisher"
+                value={formData.publisher || ''}
+                onChange={handleChange}
+                className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 py-2 px-3"
+              />
+            </div>
+
+            {/* Idioma */}
+            <div>
+              <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-1">
+                Idioma
+                <span className="text-gray-500 text-xs ml-1">(opcional)</span>
+              </label>
+              <select
+                id="language"
+                name="language"
+                value={formData.language || ''}
+                onChange={handleChange}
+                className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 py-2 px-3"
+              >
+                <option value="">Selecione um idioma</option>
+                <option value="Português">Português</option>
+                <option value="Inglês">Inglês</option>
+                <option value="Espanhol">Espanhol</option>
+                <option value="Francês">Francês</option>
+                <option value="Alemão">Alemão</option>
+                <option value="Italiano">Italiano</option>
+                <option value="Japonês">Japonês</option>
+                <option value="Chinês">Chinês</option>
+                <option value="Russo">Russo</option>
+                <option value="Árabe">Árabe</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            {/* Formato */}
+            <div>
+              <label htmlFor="format" className="block text-sm font-medium text-gray-700 mb-1">
+                Formato
+                <span className="text-gray-500 text-xs ml-1">(opcional)</span>
+              </label>
+              <select
+                id="format"
+                name="format"
+                value={formData.format || ''}
+                onChange={handleChange}
+                className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 py-2 px-3"
+              >
+                <option value="">Selecione um formato</option>
+                <option value="Capa Dura">Capa Dura</option>
+                <option value="Capa Comum">Capa Comum</option>
+                <option value="Brochura">Brochura</option>
+                <option value="Espiral">Espiral</option>
+                <option value="E-book">E-book</option>
+                <option value="Audiolivro">Audiolivro</option>
+                <option value="Outro">Outro</option>
+              </select>
             </div>
 
             {/* Categoria */}
