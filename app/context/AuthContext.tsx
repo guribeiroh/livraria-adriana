@@ -43,6 +43,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('[AuthContext] Verificando autenticação...');
 
+      // Se estamos em uma página admin, não precisamos verificar autenticação
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+        console.log('[AuthContext] Rota admin detectada, ignorando verificação de autenticação');
+        setCarregando(false);
+        return true;
+      }
+
       // Obter sessão atual
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -108,6 +115,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         if (verificacaoInicial) return;
         setVerificacaoInicial(true);
+
+        // Se estamos em uma página admin, não prosseguir com a verificação de autenticação
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+          console.log('[AuthContext] Rota admin detectada na inicialização, ignorando verificação de autenticação');
+          setCarregando(false);
+          return;
+        }
 
         // Defina um timeout para garantir que não ficaremos presos em carregamento
         const timeoutId = setTimeout(() => {
