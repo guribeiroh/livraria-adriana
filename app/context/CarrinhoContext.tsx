@@ -50,7 +50,7 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
         // Calcular o valor total inicial
         if (carrinhoParseado.itens && Array.isArray(carrinhoParseado.itens)) {
           const total = carrinhoParseado.itens.reduce(
-            (acc: number, item) => acc + (item.livro.preco || 0) * (item.quantidade || 0),
+            (acc: number, item: ItemCarrinho) => acc + (item.livro.preco || 0) * (item.quantidade || 0),
             0
           );
           setValorTotal(total);
@@ -79,7 +79,7 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
     }
     
     const novoTotal = carrinho.itens.reduce(
-      (acc: number, item) => {
+      (acc: number, item: ItemCarrinho) => {
         const preco = item.livro?.preco || 0;
         const quantidade = item.quantidade || 0;
         return acc + preco * quantidade;
