@@ -42,7 +42,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${merriweather.variable} ${playfairDisplay.variable} scroll-smooth`} suppressHydrationWarning>
-      <body className="bg-background text-primary-900 min-h-screen flex flex-col relative selection:bg-primary-200 selection:text-primary-900 overflow-x-hidden">
+      <body 
+        className="bg-background text-primary-900 min-h-screen flex flex-col relative selection:bg-primary-200 selection:text-primary-900 overflow-x-hidden" 
+        suppressHydrationWarning
+      >
         <AuthProvider>
           <CarrinhoProvider>
             <ToastProvider>
@@ -59,6 +62,19 @@ export default function RootLayout({
             </ToastProvider>
           </CarrinhoProvider>
         </AuthProvider>
+        
+        {/* Script para remover classes adicionadas por extensões */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              // Remover classes não essenciais adicionadas por extensões
+              const body = document.body;
+              if (body.classList.contains('vsc-initialized')) {
+                body.classList.remove('vsc-initialized');
+              }
+            })();
+          `
+        }} />
       </body>
     </html>
   );

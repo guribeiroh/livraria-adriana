@@ -218,7 +218,7 @@ export default function Navbar() {
                           <div className="font-semibold">Olá, {usuario.nome}</div>
                           <div className="text-primary-600">{usuario.email}</div>
                         </div>
-                        <Link href="/perfil" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Meu Perfil</Link>
+                        <Link href="/cliente/perfil" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Meu Perfil</Link>
                         <Link href="/pedidos" className="block px-4 py-2 text-sm text-primary-700 hover:bg-primary-50">Meus Pedidos</Link>
                         <button
                           onClick={handleLogout}
@@ -300,7 +300,7 @@ export default function Navbar() {
                 </Link>
                 {usuario ? (
                   <>
-                    <Link href="/perfil" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
+                    <Link href="/cliente/perfil" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>

@@ -12,12 +12,46 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Opções para o cliente Supabase
+// Opções para o cliente Supabase com configurações aprimoradas para persistência de sessão
 const supabaseOptions = {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storageKey: 'supabase.auth.token',
+    storage: {
+      getItem: (key: string) => {
+        if (typeof window === 'undefined') return null;
+        const value = localStorage.getItem(key);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Supabase Auth - getItem:', key, value ? '[Token Encontrado]' : '[Token Não Encontrado]');
+        }
+        return value;
+      },
+      setItem: (key: string, value: string) => {
+        if (typeof window === 'undefined') return;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Supabase Auth - setItem:', key, '[Salvando Token]');
+        }
+        localStorage.setItem(key, value);
+      },
+      removeItem: (key: string) => {
+        if (typeof window === 'undefined') return;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Supabase Auth - removeItem:', key, '[Removendo Token]');
+        }
+        localStorage.removeItem(key);
+      },
+    },
+  },
+  global: {
+    headers: {
+      'X-Client-Info': `@supabase/js@latest`,
+    },
+  },
+  realtime: {
+    reconnect: true,
+    timeout: 10000,
   },
 };
 

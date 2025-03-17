@@ -12,6 +12,7 @@ interface CarrinhoContextType {
   ultimoItemAdicionado: ItemCarrinho | null;
   itemAdicionadoRecentemente: boolean;
   fecharNotificacao: () => void;
+  valorTotal: number;
 }
 
 const CarrinhoContext = createContext<CarrinhoContextType | undefined>(undefined);
@@ -34,6 +35,7 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
     total: 0
   });
   
+  const [valorTotal, setValorTotal] = useState<number>(0);
   const [ultimoItemAdicionado, setUltimoItemAdicionado] = useState<ItemCarrinho | null>(null);
   const [itemAdicionadoRecentemente, setItemAdicionadoRecentemente] = useState(false);
 
@@ -44,6 +46,15 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
       try {
         const carrinhoParseado = JSON.parse(carrinhoSalvo);
         setCarrinho(carrinhoParseado);
+        
+        // Calcular o valor total inicial
+        if (carrinhoParseado.itens && Array.isArray(carrinhoParseado.itens)) {
+          const total = carrinhoParseado.itens.reduce(
+            (acc, item) => acc + (item.livro.preco || 0) * (item.quantidade || 0),
+            0
+          );
+          setValorTotal(total);
+        }
       } catch (error) {
         console.error('Erro ao carregar o carrinho:', error);
         localStorage.removeItem('carrinho');
@@ -58,10 +69,25 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
 
   // Calcular total sempre que os itens forem alterados
   useEffect(() => {
+    if (!carrinho.itens || !Array.isArray(carrinho.itens)) {
+      setValorTotal(0);
+      setCarrinho(prev => ({
+        ...prev,
+        total: 0
+      }));
+      return;
+    }
+    
     const novoTotal = carrinho.itens.reduce(
-      (acc, item) => acc + item.livro.preco * item.quantidade,
+      (acc, item) => {
+        const preco = item.livro?.preco || 0;
+        const quantidade = item.quantidade || 0;
+        return acc + preco * quantidade;
+      },
       0
     );
+    
+    setValorTotal(novoTotal);
     setCarrinho(prevCarrinho => ({
       ...prevCarrinho,
       total: novoTotal
@@ -150,7 +176,8 @@ export const CarrinhoProvider: React.FC<CarrinhoProviderProps> = ({ children }) 
         limparCarrinho,
         ultimoItemAdicionado,
         itemAdicionadoRecentemente,
-        fecharNotificacao
+        fecharNotificacao,
+        valorTotal
       }}
     >
       {children}

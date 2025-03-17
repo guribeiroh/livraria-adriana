@@ -1,17 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import Redirect from '../components/Redirect';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login, erro, carregando } = useAuth();
+  const searchParams = useSearchParams();
+  const { login, erro, carregando, usuario } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
   });
+  const [redirecionando, setRedirecionando] = useState(false);
+  const [destino, setDestino] = useState<string | null>(null);
+
+  // Verificar se já está autenticado para redirecionar
+  useEffect(() => {
+    // Determinar o destino de redirecionamento
+    const nextParam = searchParams.get('next');
+    const storedNext = typeof window !== 'undefined' ? sessionStorage.getItem('redirectAfterLogin') : null;
+    const redirectUrl = nextParam || storedNext || '/cliente';
+
+    // Se o usuário já está autenticado, preparar para redirecionar
+    if (usuario && !carregando) {
+      console.log('[LoginPage] Usuário já autenticado:', usuario.email);
+      console.log('[LoginPage] Redirecionando para:', redirectUrl);
+      
+      // Limpar redirecionamentos salvos
+      if (storedNext && typeof window !== 'undefined') {
+        sessionStorage.removeItem('redirectAfterLogin');
+      }
+
+      // Definir o destino para acionar o componente Redirect
+      setDestino(redirectUrl);
+    }
+  }, [usuario, carregando, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -21,13 +46,39 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (carregando || redirecionando) return;
+    
     const { email, senha } = formData;
+    setRedirecionando(true);
+    console.log('[LoginPage] Tentando fazer login com:', email);
+    
     const sucesso = await login(email, senha);
     
     if (sucesso) {
-      router.push('/');
+      // Determinar destino após login bem-sucedido
+      const nextParam = searchParams.get('next');
+      const storedNext = typeof window !== 'undefined' ? sessionStorage.getItem('redirectAfterLogin') : null;
+      const redirectUrl = nextParam || storedNext || '/cliente';
+      
+      console.log('[LoginPage] Login bem-sucedido, redirecionando para:', redirectUrl);
+      
+      // Limpar redirecionamentos salvos
+      if (storedNext && typeof window !== 'undefined') {
+        sessionStorage.removeItem('redirectAfterLogin');
+      }
+      
+      // Definir o destino para acionar o componente Redirect
+      setDestino(redirectUrl);
+    } else {
+      console.log('[LoginPage] Falha no login');
+      setRedirecionando(false);
     }
   };
+
+  // Se tiver um destino definido, renderizar o componente de redirecionamento
+  if (destino) {
+    return <Redirect to={destino} />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -51,8 +102,11 @@ export default function LoginPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              disabled={carregando || redirecionando}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                (carregando || redirecionando) ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
             />
           </div>
           
@@ -66,19 +120,22 @@ export default function LoginPage() {
               name="senha"
               value={formData.senha}
               onChange={handleChange}
+              disabled={carregando || redirecionando}
               required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                (carregando || redirecionando) ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
             />
           </div>
           
           <button
             type="submit"
-            disabled={carregando}
+            disabled={carregando || redirecionando}
             className={`w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition ${
-              carregando ? 'opacity-70 cursor-not-allowed' : ''
+              (carregando || redirecionando) ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
-            {carregando ? 'Entrando...' : 'Entrar'}
+            {redirecionando ? 'Redirecionando...' : carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         
