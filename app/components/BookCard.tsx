@@ -34,7 +34,7 @@ export default function BookCard({ book, index = 0 }: BookCardProps) {
       preco: book.price,
       precoOriginal: book.original_price || undefined,
       imagemUrl: book.cover_image || '',
-      disponivel: book.stock && book.stock > 0 ? true : false,
+      disponivel: book.stock !== undefined && book.stock !== null && book.stock > 0 ? true : false,
       categoria: book.category?.name || '',
       paginas: book.pages || 0,
       isbn: book.isbn || '',
@@ -52,7 +52,7 @@ export default function BookCard({ book, index = 0 }: BookCardProps) {
   };
   
   // Verificar se o livro está disponível
-  const isAvailable = book.stock !== undefined && book.stock > 0;
+  const isAvailable = book.stock !== undefined && book.stock !== null && book.stock > 0;
   const categoryName = book.category?.name || 'Sem categoria';
   
   return (

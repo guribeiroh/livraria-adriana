@@ -90,7 +90,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
       categoria: book.category?.name || '',
       isbn: book.isbn || '',
       anoPublicacao: book.publication_year || new Date().getFullYear(),
-      disponivel: book.stock && book.stock > 0 ? true : false
+      disponivel: book.stock !== undefined && book.stock !== null && book.stock > 0 ? true : false
     };
     
     for (let i = 0; i < quantidade; i++) {
@@ -147,7 +147,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
               
               <div className="flex space-x-2 mb-4">
                 <Badge>{book.category?.name}</Badge>
-                {book.stock && book.stock > 0 ? (
+                {book.stock !== undefined && book.stock !== null && book.stock > 0 ? (
                   <Badge variant="success">Em estoque</Badge>
                 ) : (
                   <Badge variant="error">Indisponível</Badge>
@@ -164,7 +164,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
                   )}
                 </div>
                 <p className="text-sm text-primary-600 mt-1">
-                  {book.stock && book.stock > 0 ? 'Pronta entrega' : 'Indisponível'}
+                  {book.stock !== undefined && book.stock !== null && book.stock > 0 ? 'Pronta entrega' : 'Indisponível'}
                 </p>
               </div>
 
@@ -188,7 +188,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
                 {book.format && <p><span className="font-semibold">Formato:</span> {book.format}</p>}
               </div>
 
-              {book.stock && book.stock > 0 && (
+              {book.stock !== undefined && book.stock !== null && book.stock > 0 && (
                 <div className="mt-auto space-y-4">
                   <div className="flex items-center">
                     <label htmlFor="quantidade" className="mr-3 text-primary-800 font-medium">Quantidade:</label>
