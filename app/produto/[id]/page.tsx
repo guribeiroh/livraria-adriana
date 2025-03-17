@@ -178,15 +178,14 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm text-primary-600 mb-8 bg-primary-50 p-4 rounded-lg border border-primary-100">
-                <div>
-                  <p><span className="font-semibold">Categoria:</span> {book.category?.name}</p>
-                  <p><span className="font-semibold">Ano:</span> {book.publication_year}</p>
-                </div>
-                <div>
-                  <p><span className="font-semibold">Páginas:</span> {book.pages}</p>
-                  <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+                <p><span className="font-semibold">Categoria:</span> {book.category?.name}</p>
+                {book.publication_year && <p><span className="font-semibold">Ano:</span> {book.publication_year}</p>}
+                {book.pages && <p><span className="font-semibold">Páginas:</span> {book.pages}</p>}
+                {book.isbn && <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>}
+                {book.publisher && <p><span className="font-semibold">Editora:</span> {book.publisher}</p>}
+                {book.language && <p><span className="font-semibold">Idioma:</span> {book.language}</p>}
+                {book.format && <p><span className="font-semibold">Formato:</span> {book.format}</p>}
               </div>
 
               {book.stock && book.stock > 0 && (
