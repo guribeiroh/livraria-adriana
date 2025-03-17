@@ -17,6 +17,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
 
   // Verificação para o painel admin
   if (requireAdmin) {
+    // Verificar se o usuário já é admin no sistema
+    if (isAdmin) {
+      return <>{children}</>;
+    }
+    
     // Verificar se a senha já foi autenticada nesta sessão
     useEffect(() => {
       // Verificar se a senha admin já foi autenticada nesta sessão
