@@ -15,11 +15,8 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
   const pathname = usePathname();
   const [senhaAutenticada, setSenhaAutenticada] = useState(false);
 
-  // Verificar se estamos em uma rota admin
-  const isAdminRoute = pathname.startsWith('/admin');
-
   // Verificação para o painel admin
-  if (requireAdmin || isAdminRoute) {
+  if (requireAdmin) {
     // Verificar se o usuário já é admin no sistema
     if (isAdmin) {
       return <>{children}</>;
@@ -27,19 +24,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
     
     // Verificar se a senha já foi autenticada nesta sessão
     useEffect(() => {
-      try {
-        const adminAutenticado = sessionStorage.getItem('adminAutenticado');
-        if (adminAutenticado === 'true') {
-          setSenhaAutenticada(true);
-        } 
-        // Se não estiver autenticado e tentar acessar uma subrota de admin, redirecionar para o admin principal
-        else if (isAdminRoute && pathname !== '/admin') {
-          router.push('/admin');
-        }
-      } catch (error) {
-        console.error("Erro ao verificar autenticação admin:", error);
+      const adminAutenticado = sessionStorage.getItem('adminAutenticado');
+      if (adminAutenticado === 'true') {
+        setSenhaAutenticada(true);
       }
-    }, [pathname, router, isAdminRoute]);
+    }, []);
 
     // Se ainda não autenticado, mostrar tela de login admin
     if (!senhaAutenticada) {
@@ -57,16 +46,6 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
                 // Salvar autenticação na sessão
                 sessionStorage.setItem('adminAutenticado', 'true');
                 setSenhaAutenticada(true);
-                
-                // Se estiver tentando acessar uma subrota específica, redirecionar para ela
-                if (pathname !== '/admin' && pathname.startsWith('/admin')) {
-                  // Manter na rota atual
-                } else if (sessionStorage.getItem('adminRedirectUrl')) {
-                  // Redirecionar para a URL salva anteriormente
-                  const redirectUrl = sessionStorage.getItem('adminRedirectUrl');
-                  sessionStorage.removeItem('adminRedirectUrl');
-                  router.push(redirectUrl || '/admin');
-                }
               } else {
                 alert('Senha incorreta!');
               }
@@ -92,22 +71,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
       );
     }
     
-    // Se autenticado com senha, mostrar conteúdo do admin
+    // Se autenticado, mostrar conteúdo do admin
     return <>{children}</>;
   }
 
-  // Para rotas não-admin, manter o comportamento normal de autenticação
-  useEffect(() => {
-    // Verificar autenticação somente após o carregamento inicial e apenas para rotas não-admin
-    if (!carregando) {
-      // Se não há usuário, redirecionar para login (apenas para rotas protegidas que não são admin)
-      if (!usuario && !pathname.startsWith('/admin')) {
-        router.push(`/login?next=${encodeURIComponent(pathname)}`);
-        return;
-      }
-    }
-  }, [usuario, carregando, pathname, router]);
-
+  // Para rotas não-admin, não precisamos mais redirecionar para login
   // Exibir nada enquanto a verificação de autenticação está em andamento
   if (carregando) {
     return (
@@ -116,12 +84,7 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
       </div>
     );
   }
-
-  // Se o usuário não estiver autenticado, não renderizar nada (apenas para rotas não-admin)
-  if (!usuario && !pathname.startsWith('/admin')) {
-    return null;
-  }
   
-  // Renderizar o conteúdo protegido
+  // Renderizar o conteúdo protegido, independente do login
   return <>{children}</>;
 }
