@@ -112,23 +112,23 @@ export interface Book {
   category_name?: string;
   category?: Category;
   slug: string;
-  pages?: number;
-  isbn?: string;
+  pages?: number | null;
+  isbn?: string | null;
   publisher?: string | null;
-  publication_year?: number;
+  publication_year?: number | null;
   language?: string | null;
   format?: string | null;
-  stock?: number;
+  stock?: number | null;
   featured?: boolean;
-  discount_percentage?: number;
+  discount_percentage?: number | null;
   original_price?: number | null;
   cover_image?: string | null;
   is_active?: boolean;
   is_featured?: boolean;
   is_bestseller?: boolean;
   is_new?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export type Review = {
