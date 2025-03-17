@@ -39,7 +39,7 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative overflow-hidden">
+      <div className="relative">
         {/* Ribbon de desconto */}
         {livro.precoOriginal && livro.precoOriginal > livro.preco && (
           <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-accent-500 to-primary-500 text-white text-xs font-bold py-1 px-2 shadow-md">
