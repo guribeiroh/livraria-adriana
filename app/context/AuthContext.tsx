@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, senha: string) => Promise<boolean>;
   logout: () => Promise<void>;
   verificarAutenticacao: () => Promise<boolean>;
+  registrar: (nome: string, email: string, senha: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -207,6 +208,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Função de registro
+  const registrar = async (nome: string, email: string, senha: string): Promise<boolean> => {
+    try {
+      setErro(null);
+      console.log('[AuthContext] Tentando registrar usuário:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome: nome
+          }
+        }
+      });
+
+      if (error) {
+        console.error('[AuthContext] Erro no registro:', error.message);
+        setErro(
+          error.message === 'User already registered'
+            ? 'Este email já está registrado'
+            : error.message
+        );
+        return false;
+      }
+
+      // Registro bem-sucedido
+      console.log('[AuthContext] Registro bem-sucedido para:', email);
+      
+      // Se o usuário requer confirmação de email
+      if (data.user && data.session === null) {
+        setErro('Verifique seu email para confirmar o registro');
+        return true;
+      }
+
+      // Se o usuário foi registrado e autenticado imediatamente
+      return true;
+    } catch (error: any) {
+      console.error('[AuthContext] Erro no registro:', error.message);
+      setErro(`Erro no registro: ${error.message}`);
+      return false;
+    }
+  };
+
   // Função de logout
   const logout = async (): Promise<void> => {
     try {
@@ -245,6 +290,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     verificarAutenticacao,
+    registrar,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
