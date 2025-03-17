@@ -27,10 +27,10 @@ interface UserAddress {
 
 export default function GerenciarEnderecos() {
   const router = useRouter();
-  const { usuario, carregandoAuth } = useAuth();
+  const { usuario, carregando } = useAuth();
   
   const [enderecos, setEnderecos] = useState<UserAddress[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [carregandoEnderecos, setCarregandoEnderecos] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [modoEdicao, setModoEdicao] = useState<string | null>(null);
   const [novoEndereco, setNovoEndereco] = useState(false);
@@ -59,7 +59,7 @@ export default function GerenciarEnderecos() {
           return;
         }
         
-        setCarregando(true);
+        setCarregandoEnderecos(true);
         
         const { data, error } = await supabase
           .from('user_addresses')
@@ -77,7 +77,7 @@ export default function GerenciarEnderecos() {
         console.error('Erro ao carregar endereços:', error);
         setErro(error.message);
       } finally {
-        setCarregando(false);
+        setCarregandoEnderecos(false);
       }
     };
     
@@ -91,7 +91,7 @@ export default function GerenciarEnderecos() {
     }
     
     try {
-      setCarregando(true);
+      setCarregandoEnderecos(true);
       
       const { error } = await supabase
         .from('user_addresses')
@@ -108,7 +108,7 @@ export default function GerenciarEnderecos() {
       console.error('Erro ao excluir endereço:', error);
       setErro(error.message);
     } finally {
-      setCarregando(false);
+      setCarregandoEnderecos(false);
     }
   };
   
@@ -168,7 +168,7 @@ export default function GerenciarEnderecos() {
   // Definir um endereço como padrão
   const handleDefinirPadrao = async (id: string) => {
     try {
-      setCarregando(true);
+      setCarregandoEnderecos(true);
       
       // Primeiro, remover o status de padrão de todos os endereços
       await supabase
@@ -195,7 +195,7 @@ export default function GerenciarEnderecos() {
       console.error('Erro ao definir endereço como padrão:', error);
       setErro(error.message);
     } finally {
-      setCarregando(false);
+      setCarregandoEnderecos(false);
     }
   };
   
@@ -217,7 +217,7 @@ export default function GerenciarEnderecos() {
     }
     
     try {
-      setCarregando(true);
+      setCarregandoEnderecos(true);
       
       // Se for definir como padrão, remover o status de padrão dos outros endereços
       if (formEndereco.padrao) {
@@ -283,7 +283,7 @@ export default function GerenciarEnderecos() {
       console.error('Erro ao salvar endereço:', error);
       setErro(error.message);
     } finally {
-      setCarregando(false);
+      setCarregandoEnderecos(false);
     }
   };
   
@@ -293,7 +293,7 @@ export default function GerenciarEnderecos() {
     setNovoEndereco(false);
   };
   
-  if (carregandoAuth) {
+  if (carregando) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -575,10 +575,10 @@ export default function GerenciarEnderecos() {
               </button>
               <button
                 type="submit"
-                disabled={carregando}
+                disabled={carregandoEnderecos}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:bg-blue-300"
               >
-                {carregando ? 'Salvando...' : 'Salvar Endereço'}
+                {carregandoEnderecos ? 'Salvando...' : 'Salvar Endereço'}
               </button>
             </div>
           </form>
@@ -586,7 +586,7 @@ export default function GerenciarEnderecos() {
       )}
       
       {/* Lista de endereços */}
-      {!carregando && !modoEdicao && !novoEndereco && (
+      {!carregandoEnderecos && !modoEdicao && !novoEndereco && (
         <div className="space-y-4">
           {enderecos.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
