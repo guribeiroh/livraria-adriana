@@ -114,10 +114,10 @@ export interface Book {
   slug: string;
   pages?: number;
   isbn?: string;
-  publisher?: string;
+  publisher?: string | null;
   publication_year?: number;
-  language?: string;
-  format?: string;
+  language?: string | null;
+  format?: string | null;
   stock?: number;
   featured?: boolean;
   discount_percentage?: number;
