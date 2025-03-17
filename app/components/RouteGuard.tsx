@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 
 interface RouteGuardProps {
@@ -10,14 +10,33 @@ interface RouteGuardProps {
 }
 
 export default function RouteGuard({ children, requireAdmin = false }: RouteGuardProps) {
-  const { carregando } = useAuth();
+  const { usuario, carregando, isAdmin } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
-
-  // Para o painel admin, não exigir nenhuma autenticação
-  if (requireAdmin) {
-    // Renderizar o conteúdo do admin sem verificações
-    return <>{children}</>;
-  }
+  const [autorizado, setAutorizado] = useState(false);
+  
+  useEffect(() => {
+    // Verificar autorização quando a autenticação for concluída
+    if (!carregando) {
+      // Se a rota requer privilégios de administrador
+      if (requireAdmin) {
+        if (isAdmin) {
+          setAutorizado(true);
+        } else {
+          console.log('[RouteGuard] Acesso negado para rota admin:', pathname);
+          router.push('/login?next=' + encodeURIComponent(pathname));
+        }
+      } else {
+        // Para rotas que não requerem administrador, apenas verifica se o usuário está autenticado
+        if (usuario) {
+          setAutorizado(true);
+        } else {
+          console.log('[RouteGuard] Acesso negado para rota protegida:', pathname);
+          router.push('/login?next=' + encodeURIComponent(pathname));
+        }
+      }
+    }
+  }, [carregando, usuario, isAdmin, pathname, requireAdmin, router]);
 
   // Exibir loader enquanto a verificação de autenticação está em andamento
   if (carregando) {
@@ -28,6 +47,6 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
     );
   }
   
-  // Renderizar o conteúdo para qualquer outro caso
-  return <>{children}</>;
+  // Renderizar o conteúdo apenas se autorizado
+  return autorizado ? <>{children}</> : null;
 }

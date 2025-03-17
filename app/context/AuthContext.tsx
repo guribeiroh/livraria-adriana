@@ -43,13 +43,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('[AuthContext] Verificando autenticação...');
 
-      // Se estamos em uma página admin, não precisamos verificar autenticação
-      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-        console.log('[AuthContext] Rota admin detectada, ignorando verificação de autenticação');
-        setCarregando(false);
-        return true;
-      }
-
       // Obter sessão atual
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -79,11 +72,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         id: session.user.id,
         email: session.user.email || '',
         nome: session.user.user_metadata?.nome || '',
-        admin: session.user.user_metadata?.admin || false,
+        admin: !!session.user.user_metadata?.admin,
+        role: session.user.user_metadata?.role || ''
       };
       
       // Verificar se é admin
-      setIsAdmin(!!usuarioEncontrado.admin);
+      const isUserAdmin = !!usuarioEncontrado.admin || usuarioEncontrado.role === 'admin';
+      setIsAdmin(isUserAdmin);
       
       // Obter perfil do usuário do banco de dados
       const { data: perfilData, error: perfilError } = await supabase
@@ -106,6 +101,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('[AuthContext] Erro ao verificar autenticação:', error.message);
       setErro('Erro ao verificar sessão: ' + error.message);
       return false;
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -115,13 +112,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         if (verificacaoInicial) return;
         setVerificacaoInicial(true);
-
-        // Se estamos em uma página admin, não prosseguir com a verificação de autenticação
-        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-          console.log('[AuthContext] Rota admin detectada na inicialização, ignorando verificação de autenticação');
-          setCarregando(false);
-          return;
-        }
 
         // Defina um timeout para garantir que não ficaremos presos em carregamento
         const timeoutId = setTimeout(() => {
@@ -133,7 +123,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Verificar autenticação atual
         await verificarAutenticacao();
-        setCarregando(false);
         
         // Configurar listener para mudanças na autenticação
         const { data: { subscription } } = await supabase.auth.onAuthStateChange(
@@ -147,11 +136,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   id: session.user.id,
                   email: session.user.email || '',
                   nome: session.user.user_metadata?.nome || '',
-                  admin: session.user.user_metadata?.admin || false,
+                  admin: !!session.user.user_metadata?.admin,
+                  role: session.user.user_metadata?.role || ''
                 };
                 
+                // Verificar se é admin
+                const isUserAdmin = !!usuarioAtualizado.admin || usuarioAtualizado.role === 'admin';
+                setIsAdmin(isUserAdmin);
                 setUsuario(usuarioAtualizado);
-                setIsAdmin(!!usuarioAtualizado.admin);
                 
                 // Obter perfil atualizado
                 const { data: perfilData } = await supabase
@@ -233,7 +225,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password: senha,
         options: {
           data: {
-            nome: nome
+            nome: nome,
+            admin: false,
+            role: 'cliente'
           }
         }
       });

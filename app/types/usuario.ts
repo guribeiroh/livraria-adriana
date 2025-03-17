@@ -10,6 +10,7 @@ export interface Usuario {
   metadata?: {
     nome?: string;
     admin?: boolean;
+    role?: string;
   };
 }
 
