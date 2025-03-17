@@ -250,8 +250,8 @@ export default function BuscaPage() {
             </div>
             
             {isLoadingBusca ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {Array.from({ length: 9 }).map((_, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, index) => (
                   <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
                     <Skeleton className="w-full h-64" />
                     <div className="p-4 space-y-2">
@@ -263,7 +263,7 @@ export default function BuscaPage() {
                 ))}
               </div>
             ) : livrosFiltrados.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 {livrosFiltrados.map((livro, index) => (
                   <BookCard 
                     key={livro.id} 

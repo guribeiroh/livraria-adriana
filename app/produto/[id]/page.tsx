@@ -343,7 +343,7 @@ export default function ProdutoPage({ params }: { params: { id: string } }) {
         <section className="container mx-auto px-4 pt-16">
           <h2 className="text-2xl font-display font-bold text-primary-800 mb-6">Livros relacionados</h2>
           
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-6">
             {livrosRelacionados.map((livroRelacionado, index) => (
               <BookCard key={livroRelacionado.id} book={livroRelacionado} index={index} />
             ))}
