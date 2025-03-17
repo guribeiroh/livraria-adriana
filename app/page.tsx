@@ -83,7 +83,7 @@ export default function HomePage() {
             Livros em Destaque
           </SectionTitle>
           
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mt-10">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-10">
             {isLoading ? (
               Array(8).fill(0).map((_, index) => (
                 <div key={`skeleton-${index}`}>{renderSkeletonCard()}</div>
