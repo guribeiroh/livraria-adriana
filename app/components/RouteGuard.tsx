@@ -72,10 +72,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
       );
     }
     
-    // Se autenticado, mostrar conteúdo do admin
+    // Se autenticado com senha, mostrar conteúdo do admin
     return <>{children}</>;
   }
 
+  // Para rotas não-admin, manter o comportamento normal de autenticação
   useEffect(() => {
     // Verificar autenticação somente após o carregamento inicial e apenas para rotas não-admin
     if (!carregando) {
