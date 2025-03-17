@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { Usuario } from '@/types/usuario';
+import { Usuario } from '../types/usuario';
 
 interface AuthContextType {
   usuario: Usuario | null;
