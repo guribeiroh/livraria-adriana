@@ -165,7 +165,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     }
     
     // Validar estoque
-    if (formData.stock === undefined || formData.stock < 0) {
+    if ((formData.stock === undefined || formData.stock === null || formData.stock < 0)) {
       newErrors.stock = 'A quantidade em estoque deve ser um número não negativo';
     }
     
