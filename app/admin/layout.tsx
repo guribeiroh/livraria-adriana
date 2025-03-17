@@ -19,7 +19,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RouteGuard requireAdmin={true}>
+    <RouteGuard adminOnly={true}>
       <div className="flex min-h-screen">
         <Sidebar navItems={navItems} />
         <div className="flex-1 lg:ml-64">
