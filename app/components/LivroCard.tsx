@@ -41,17 +41,16 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
     >
       <div className="relative">
         {/* Ribbon de desconto */}
-        {livro.precoOriginal && livro.precoOriginal > livro.preco && 
-          Math.round((1 - livro.preco / livro.precoOriginal) * 100) > 0 && (
+        {livro.precoOriginal && livro.precoOriginal > livro.preco && (
           <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-accent-500 to-primary-500 text-white text-xs font-bold py-1 px-2 shadow-md">
             {Math.round((1 - livro.preco / livro.precoOriginal) * 100)}% OFF
           </div>
         )}
         
         <Link href={`/produto/${livro.id}`} className="block">
-          <div className="relative aspect-[5/8] w-full bg-primary-50 overflow-hidden">
+          <div className="relative aspect-[5/7] w-full bg-primary-50 overflow-hidden">
             <Image 
-              src={livro.imagemUrl || "https://via.placeholder.com/625x998?text=Sem+Imagem"}
+              src={livro.imagemUrl || "/images/book-placeholder.jpg"}
               alt={livro.titulo}
               fill
               style={{ objectFit: 'contain' }}
@@ -62,7 +61,7 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
             {/* Overlay de hover */}
             <div className={`absolute inset-0 bg-black bg-opacity-20 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-white bg-opacity-90 text-primary-800 font-medium py-2 px-4 rounded-full transform transition-all duration-300 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100">
+                <span className="bg-white bg-opacity-90 text-primary-800 font-medium py-1 px-3 rounded-full transform transition-all duration-300 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100 text-sm">
                   Ver detalhes
                 </span>
               </div>
@@ -71,7 +70,7 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
         </Link>
         
         {/* Indicador de disponibilidade */}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-2 left-2">
           {livro.disponivel ? (
             <Badge variant="success" size="sm" rounded>Em estoque</Badge>
           ) : (
@@ -80,44 +79,44 @@ export default function LivroCard({ livro, index = 0 }: LivroCardProps) {
         </div>
       </div>
       
-      <div className="card-body">
-        <div className="mb-2">
+      <div className="card-body p-3">
+        <div className="mb-1">
           <p className="text-xs text-primary-500 font-medium uppercase tracking-wider">{livro.categoria}</p>
         </div>
         
         <Link href={`/produto/${livro.id}`} className="block group">
-          <h3 className="heading-display text-lg text-primary-800 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
+          <h3 className="heading-display text-base text-primary-800 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
             {livro.titulo}
           </h3>
         </Link>
         
-        <p className="text-sm text-primary-600 mb-3 italic">{livro.autor}</p>
+        <p className="text-xs text-primary-600 mb-2 italic">{livro.autor}</p>
         
-        <div className="flex flex-wrap items-center justify-between mt-auto pt-3 border-t border-primary-100">
+        <div className="flex flex-wrap items-center justify-between mt-auto pt-2 border-t border-primary-100">
           <div>
             <div className="flex items-baseline">
-              <span className="text-xl font-display font-bold text-primary-800">
+              <span className="text-lg font-display font-bold text-primary-800">
                 R${livro.preco.toFixed(2)}
               </span>
               {livro.precoOriginal && livro.precoOriginal > livro.preco && (
-                <span className="text-sm text-primary-400 line-through ml-2">
+                <span className="text-xs text-primary-400 line-through ml-2">
                   R${livro.precoOriginal.toFixed(2)}
                 </span>
               )}
             </div>
-            <div className="text-xs text-primary-400 mt-1">
+            <div className="text-xs text-primary-400 mt-0.5">
               {livro.paginas} páginas
             </div>
           </div>
           
           <Button
             variant="primary" 
-            size="sm"
+            size="xs"
             onClick={handleAdicionarAoCarrinho}
             disabled={!livro.disponivel}
             className={`rounded-full ${botaoAnimado ? 'animate-cart-pulse' : ''}`}
             leftIcon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             }
