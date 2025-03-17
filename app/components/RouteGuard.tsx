@@ -15,8 +15,11 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
   const pathname = usePathname();
   const [senhaAutenticada, setSenhaAutenticada] = useState(false);
 
+  // Verificar se estamos em uma rota admin
+  const isAdminRoute = pathname.startsWith('/admin');
+
   // Verificação para o painel admin
-  if (requireAdmin) {
+  if (requireAdmin || isAdminRoute) {
     // Verificar se o usuário já é admin no sistema
     if (isAdmin) {
       return <>{children}</>;
@@ -24,12 +27,19 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
     
     // Verificar se a senha já foi autenticada nesta sessão
     useEffect(() => {
-      // Verificar se a senha admin já foi autenticada nesta sessão
-      const adminAutenticado = sessionStorage.getItem('adminAutenticado');
-      if (adminAutenticado === 'true') {
-        setSenhaAutenticada(true);
+      try {
+        const adminAutenticado = sessionStorage.getItem('adminAutenticado');
+        if (adminAutenticado === 'true') {
+          setSenhaAutenticada(true);
+        } 
+        // Se não estiver autenticado e tentar acessar uma subrota de admin, redirecionar para o admin principal
+        else if (isAdminRoute && pathname !== '/admin') {
+          router.push('/admin');
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação admin:", error);
       }
-    }, []);
+    }, [pathname, router, isAdminRoute]);
 
     // Se ainda não autenticado, mostrar tela de login admin
     if (!senhaAutenticada) {
@@ -47,6 +57,16 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
                 // Salvar autenticação na sessão
                 sessionStorage.setItem('adminAutenticado', 'true');
                 setSenhaAutenticada(true);
+                
+                // Se estiver tentando acessar uma subrota específica, redirecionar para ela
+                if (pathname !== '/admin' && pathname.startsWith('/admin')) {
+                  // Manter na rota atual
+                } else if (sessionStorage.getItem('adminRedirectUrl')) {
+                  // Redirecionar para a URL salva anteriormente
+                  const redirectUrl = sessionStorage.getItem('adminRedirectUrl');
+                  sessionStorage.removeItem('adminRedirectUrl');
+                  router.push(redirectUrl || '/admin');
+                }
               } else {
                 alert('Senha incorreta!');
               }
