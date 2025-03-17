@@ -229,7 +229,7 @@ export default function ConfirmacaoPage() {
                   <div key={item.livro.id} className="flex items-start gap-4 pb-4 border-b border-gray-100">
                     <div className="w-16 h-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                       <img
-                        src={item.livro.imagem || item.livro.imagemUrl}
+                        src={item.livro.cover_image || item.livro.imagemUrl}
                         alt={item.livro.titulo}
                         className="w-full h-full object-cover"
                       />
