@@ -81,7 +81,7 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
     // Verificar autenticação somente após o carregamento inicial e apenas para rotas não-admin
     if (!carregando) {
       // Se não há usuário, redirecionar para login (apenas para rotas protegidas que não são admin)
-      if (!usuario) {
+      if (!usuario && !pathname.startsWith('/admin')) {
         router.push(`/login?next=${encodeURIComponent(pathname)}`);
         return;
       }
@@ -98,7 +98,7 @@ export default function RouteGuard({ children, requireAdmin = false }: RouteGuar
   }
 
   // Se o usuário não estiver autenticado, não renderizar nada (apenas para rotas não-admin)
-  if (!usuario) {
+  if (!usuario && !pathname.startsWith('/admin')) {
     return null;
   }
   
