@@ -136,7 +136,7 @@ export default function GerenciarEnderecos() {
     setModoEdicao(null);
     
     // Inicializar com o nome do usuário, se disponível
-    const profileName = usuario?.user_metadata?.name || '';
+    const profileName = usuario?.metadata?.nome || '';
     const nameParts = profileName.split(' ');
     
     setFormEndereco({
