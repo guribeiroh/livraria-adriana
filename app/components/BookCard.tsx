@@ -64,7 +64,8 @@ export default function BookCard({ book, index = 0 }: BookCardProps) {
     >
       <div className="relative">
         {/* Ribbon de desconto */}
-        {book.original_price && book.original_price > book.price && (
+        {book.original_price && book.original_price > book.price && 
+          Math.round((1 - book.price / book.original_price) * 100) > 0 && (
           <div className="absolute top-0 right-0 z-10 bg-gradient-to-r from-accent-500 to-primary-500 text-white text-xs font-bold py-1 px-2 shadow-md">
             {Math.round((1 - book.price / book.original_price) * 100)}% OFF
           </div>
