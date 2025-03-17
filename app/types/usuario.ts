@@ -5,7 +5,7 @@ export interface Usuario {
   id: string;
   email: string;
   nome: string;
-  admin?: boolean;
+  admin: boolean;
   role?: string;
   metadata?: {
     nome?: string;

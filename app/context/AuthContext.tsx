@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
@@ -36,19 +36,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [carregando, setCarregando] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [verificacaoInicial, setVerificacaoInicial] = useState(false);
 
   // Verificar autenticação - pode ser chamado de qualquer componente
   const verificarAutenticacao = async (): Promise<boolean> => {
     try {
       console.log('[AuthContext] Verificando autenticação...');
-
-      // Se estamos em uma página admin, não precisamos verificar autenticação
-      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-        console.log('[AuthContext] Rota admin detectada, ignorando verificação de autenticação');
-        setCarregando(false);
-        return true;
-      }
 
       // Obter sessão atual
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -59,6 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUsuario(null);
         setPerfil(null);
         setIsAdmin(false);
+        setCarregando(false);
         return false;
       }
       
@@ -68,6 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUsuario(null);
         setPerfil(null);
         setIsAdmin(false);
+        setCarregando(false);
         return false;
       }
 
@@ -78,120 +72,82 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const usuarioEncontrado: Usuario = {
         id: session.user.id,
         email: session.user.email || '',
-        nome: session.user.user_metadata?.nome || '',
+        nome: session.user.user_metadata?.nome || session.user.email?.split('@')[0] || '',
         admin: session.user.user_metadata?.admin || false,
       };
       
-      // Verificar se é admin
-      setIsAdmin(!!usuarioEncontrado.admin);
+      // Verificar se o usuário é admin
+      const isUserAdmin = session.user.user_metadata?.admin === true;
       
-      // Obter perfil do usuário do banco de dados
+      // Buscar perfil adicional do usuário se necessário
       const { data: perfilData, error: perfilError } = await supabase
-        .from('perfis')
+        .from('profiles')
         .select('*')
-        .eq('id', usuarioEncontrado.id)
+        .eq('id', session.user.id)
         .single();
-        
+      
       if (perfilError && perfilError.code !== 'PGRST116') {
-        console.warn('[AuthContext] Erro ao buscar perfil:', perfilError.message);
+        console.error('[AuthContext] Erro ao buscar perfil do usuário:', perfilError.message);
       } else if (perfilData) {
+        console.log('[AuthContext] Perfil encontrado:', perfilData);
         setPerfil(perfilData);
-        console.log('[AuthContext] Perfil carregado');
+        
+        // Atualizar nome do usuário se disponível no perfil
+        if (perfilData.name && !usuarioEncontrado.nome) {
+          usuarioEncontrado.nome = perfilData.name;
+        }
+        
+        // Verificar se é admin também pelo perfil
+        if (perfilData.role === 'admin') {
+          usuarioEncontrado.admin = true;
+        }
       }
       
       // Atualizar estado
       setUsuario(usuarioEncontrado);
+      setIsAdmin(usuarioEncontrado.admin);
+      setCarregando(false);
+      
       return true;
     } catch (error: any) {
       console.error('[AuthContext] Erro ao verificar autenticação:', error.message);
-      setErro('Erro ao verificar sessão: ' + error.message);
+      setErro('Erro ao verificar autenticação: ' + error.message);
+      setUsuario(null);
+      setPerfil(null);
+      setIsAdmin(false);
+      setCarregando(false);
       return false;
     }
   };
 
-  // Efeito para verificar autenticação na inicialização
+  // Verificar autenticação ao carregar
   useEffect(() => {
-    const inicializar = async () => {
-      try {
-        if (verificacaoInicial) return;
-        setVerificacaoInicial(true);
-
-        // Se estamos em uma página admin, não prosseguir com a verificação de autenticação
-        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-          console.log('[AuthContext] Rota admin detectada na inicialização, ignorando verificação de autenticação');
-          setCarregando(false);
-          return;
-        }
-
-        // Defina um timeout para garantir que não ficaremos presos em carregamento
-        const timeoutId = setTimeout(() => {
-          if (carregando) {
-            console.warn('[AuthContext] Timeout de inicialização - finalizando carregamento');
-            setCarregando(false);
-          }
-        }, 5000);
-
-        // Verificar autenticação atual
-        await verificarAutenticacao();
-        setCarregando(false);
-        
-        // Configurar listener para mudanças na autenticação
-        const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('[AuthContext] Evento de autenticação:', event);
-            
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              if (session) {
-                // Converter dados para o formato Usuario
-                const usuarioAtualizado: Usuario = {
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  nome: session.user.user_metadata?.nome || '',
-                  admin: session.user.user_metadata?.admin || false,
-                };
-                
-                setUsuario(usuarioAtualizado);
-                setIsAdmin(!!usuarioAtualizado.admin);
-                
-                // Obter perfil atualizado
-                const { data: perfilData } = await supabase
-                  .from('perfis')
-                  .select('*')
-                  .eq('id', usuarioAtualizado.id)
-                  .single();
-                  
-                if (perfilData) {
-                  setPerfil(perfilData);
-                }
-              }
-            } else if (event === 'SIGNED_OUT') {
-              setUsuario(null);
-              setPerfil(null);
-              setIsAdmin(false);
-            }
-          }
-        );
-        
-        clearTimeout(timeoutId);
-        
-        // Cleanup da inscrição
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error: any) {
-        console.error('[AuthContext] Erro na inicialização:', error.message);
-        setCarregando(false);
-        setErro('Erro na inicialização: ' + error.message);
+    verificarAutenticacao();
+    
+    // Configurar listener para mudanças na autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Evento de autenticação:', event);
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        verificarAutenticacao();
+      } else if (event === 'SIGNED_OUT') {
+        setUsuario(null);
+        setPerfil(null);
+        setIsAdmin(false);
       }
+    });
+    
+    // Limpar listener ao desmontar
+    return () => {
+      authListener.subscription.unsubscribe();
     };
-
-    inicializar();
-  }, [verificacaoInicial]);
+  }, []);
 
   // Função de login
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
       setErro(null);
+      setCarregando(true);
       console.log('[AuthContext] Tentando login para:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -206,6 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             ? 'Email ou senha inválidos'
             : error.message
         );
+        setCarregando(false);
         return false;
       }
 
@@ -218,50 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: any) {
       console.error('[AuthContext] Erro inesperado no login:', error.message);
       setErro('Erro no login: ' + error.message);
-      return false;
-    }
-  };
-
-  // Função de registro
-  const registrar = async (nome: string, email: string, senha: string): Promise<boolean> => {
-    try {
-      setErro(null);
-      console.log('[AuthContext] Tentando registrar usuário:', email);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: senha,
-        options: {
-          data: {
-            nome: nome
-          }
-        }
-      });
-
-      if (error) {
-        console.error('[AuthContext] Erro no registro:', error.message);
-        setErro(
-          error.message === 'User already registered'
-            ? 'Este email já está registrado'
-            : error.message
-        );
-        return false;
-      }
-
-      // Registro bem-sucedido
-      console.log('[AuthContext] Registro bem-sucedido para:', email);
-      
-      // Se o usuário requer confirmação de email
-      if (data.user && data.session === null) {
-        setErro('Verifique seu email para confirmar o registro');
-        return true;
-      }
-
-      // Se o usuário foi registrado e autenticado imediatamente
-      return true;
-    } catch (error: any) {
-      console.error('[AuthContext] Erro no registro:', error.message);
-      setErro(`Erro no registro: ${error.message}`);
+      setCarregando(false);
       return false;
     }
   };
@@ -269,29 +183,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Função de logout
   const logout = async (): Promise<void> => {
     try {
-      setErro(null);
-      console.log('[AuthContext] Realizando logout');
+      setCarregando(true);
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('[AuthContext] Erro no logout:', error.message);
-        setErro('Erro ao fazer logout: ' + error.message);
-        return;
+        throw error;
       }
       
-      // Limpar dados de sessão após logout
+      // Limpar dados do usuário
       setUsuario(null);
       setPerfil(null);
       setIsAdmin(false);
-      console.log('[AuthContext] Logout concluído com sucesso');
-      
-      // Redirecionar para home após logout
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
+      console.log('[AuthContext] Logout realizado com sucesso');
     } catch (error: any) {
-      console.error('[AuthContext] Erro inesperado no logout:', error.message);
-      setErro('Erro no logout: ' + error.message);
+      console.error('[AuthContext] Erro ao fazer logout:', error.message);
+      setErro('Erro ao fazer logout: ' + error.message);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Função de registro
+  const registrar = async (nome: string, email: string, senha: string): Promise<boolean> => {
+    try {
+      setErro(null);
+      setCarregando(true);
+      
+      // Registrar usuário com Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome: nome,
+            admin: false,
+          },
+        },
+      });
+
+      if (error) {
+        console.error('[AuthContext] Erro ao registrar:', error.message);
+        setErro('Erro ao registrar: ' + error.message);
+        return false;
+      }
+
+      // Criar perfil do usuário se o registro foi bem-sucedido
+      if (data?.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: nome,
+            email: email,
+            role: 'customer',
+          });
+
+        if (profileError) {
+          console.error('[AuthContext] Erro ao criar perfil:', profileError.message);
+        }
+      }
+
+      console.log('[AuthContext] Registro bem-sucedido');
+      return true;
+    } catch (error: any) {
+      console.error('[AuthContext] Erro inesperado no registro:', error.message);
+      setErro('Erro no registro: ' + error.message);
+      return false;
+    } finally {
+      setCarregando(false);
     }
   };
 
