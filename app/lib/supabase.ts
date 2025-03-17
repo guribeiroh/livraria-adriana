@@ -122,7 +122,7 @@ export interface Book {
   featured?: boolean;
   discount_percentage?: number;
   original_price?: number | null;
-  cover_image?: string;
+  cover_image?: string | null;
   is_active?: boolean;
   is_featured?: boolean;
   is_bestseller?: boolean;
