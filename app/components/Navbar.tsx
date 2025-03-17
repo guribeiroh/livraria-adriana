@@ -50,13 +50,13 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image 
-              src="/logo.png" 
-              alt="Logo da Livraria" 
-              width={40} 
-              height={40} 
+              src="/images/logo.svg" 
+              alt="Logo da Livraria Online" 
+              width={240} 
+              height={80} 
               className="w-auto h-10"
+              priority
             />
-            <span className="ml-2 text-xl font-bold text-primary-700">Livraria Online</span>
           </Link>
 
           {/* Botão de menu mobile */}
