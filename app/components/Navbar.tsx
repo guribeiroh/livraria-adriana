@@ -5,7 +5,7 @@ import { useCarrinho } from '../context/CarrinhoContext';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 export default function Navbar() {
   const { carrinho } = useCarrinho();
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [perfilAberto, setPerfilAberto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const totalItens = carrinho.itens.reduce((total, item) => total + item.quantidade, 0);
 
@@ -85,14 +86,34 @@ export default function Navbar() {
               Início
             </Link>
             <Link 
-              href="/sobre" 
+              href="/busca" 
               className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname === '/sobre' 
+                pathname === '/busca' && !searchParams?.has('filter')
                   ? 'text-primary-700 bg-primary-50' 
                   : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
               }`}
             >
-              Sobre
+              Todos os livros
+            </Link>
+            <Link 
+              href="/busca?filter=lancamentos" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/busca' && searchParams?.get('filter') === 'lancamentos'
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Lançamentos
+            </Link>
+            <Link 
+              href="/busca?filter=promocoes" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/busca' && searchParams?.get('filter') === 'promocoes'
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Promoções
             </Link>
             <Link 
               href="/contato" 
@@ -104,17 +125,15 @@ export default function Navbar() {
             >
               Contato
             </Link>
-            <Link href="/busca" className="text-primary-700 font-medium hover:text-primary-800">
-              Livros
-            </Link>
-            <Link href="/busca?categoria=mais-vendidos" className="text-primary-700 font-medium hover:text-primary-800">
-              Mais Vendidos
-            </Link>
-            <Link href="/busca?categoria=lancamentos" className="text-primary-700 font-medium hover:text-primary-800">
-              Lançamentos
-            </Link>
-            <Link href="/busca?categoria=promocoes" className="text-primary-700 font-medium hover:text-primary-800">
-              Promoções
+            <Link 
+              href="/duvidas" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/duvidas' 
+                  ? 'text-primary-700 bg-primary-50' 
+                  : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+              }`}
+            >
+              Dúvidas
             </Link>
           </div>
 
@@ -225,12 +244,42 @@ export default function Navbar() {
         {menuAberto && (
           <div className="md:hidden mt-4 pb-4">
             <nav className="flex flex-col space-y-2">
-              <Link href="/busca" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Livros</Link>
-              <Link href="/busca?categoria=mais-vendidos" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Mais Vendidos</Link>
-              <Link href="/busca?categoria=lancamentos" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Lançamentos</Link>
-              <Link href="/busca?categoria=promocoes" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Promoções</Link>
-              <Link href="/sobre" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Sobre</Link>
-              <Link href="/contato" className="px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">Contato</Link>
+              <Link 
+                href="/" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/' ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Início
+              </Link>
+              <Link 
+                href="/busca" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/busca' && !searchParams?.has('filter') ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Todos os livros
+              </Link>
+              <Link 
+                href="/busca?filter=lancamentos" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/busca' && searchParams?.get('filter') === 'lancamentos' ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Lançamentos
+              </Link>
+              <Link 
+                href="/busca?filter=promocoes" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/busca' && searchParams?.get('filter') === 'promocoes' ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Promoções
+              </Link>
+              <Link 
+                href="/contato" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/contato' ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Contato
+              </Link>
+              <Link 
+                href="/duvidas" 
+                className={`px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md ${pathname === '/duvidas' ? 'font-medium bg-primary-50' : ''}`}
+              >
+                Dúvidas
+              </Link>
               <div className="border-t pt-2 mt-2 space-y-2">
                 <Link href="/busca" className="flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 rounded-md">
                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

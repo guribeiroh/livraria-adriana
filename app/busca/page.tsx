@@ -14,6 +14,7 @@ export default function BuscaPage() {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q');
   const categoriaParam = searchParams.get('categoria');
+  const filterParam = searchParams.get('filter');
   
   const [searchQuery, setSearchQuery] = useState(queryParam || '');
   const [filtroCategoria, setFiltroCategoria] = useState<string | null>(categoriaParam);
@@ -49,7 +50,14 @@ export default function BuscaPage() {
         }
       })
       .catch(err => console.error('Erro ao buscar autores:', err));
-  }, []);
+    
+    // Configurar os filtros com base nos parâmetros da URL
+    if (filterParam === 'lancamentos') {
+      setOrdenacao('recentes');
+    } else if (filterParam === 'promocoes') {
+      setOrdenacao('precoAsc');
+    }
+  }, [filterParam]);
   
   // Filtrar e ordenar livros com base nos critérios
   const livrosFiltrados = resultadosBusca
@@ -72,6 +80,24 @@ export default function BuscaPage() {
       // Filtrar por preço máximo
       if (filtroPrecoMax !== null && livro.price > filtroPrecoMax) {
         return false;
+      }
+      
+      // Filtro de lançamentos (últimos 30 dias)
+      if (filterParam === 'lancamentos') {
+        const trinta_dias_atras = new Date();
+        trinta_dias_atras.setDate(trinta_dias_atras.getDate() - 30);
+        
+        const created_date = livro.created_at ? new Date(livro.created_at) : null;
+        if (!created_date || created_date < trinta_dias_atras) {
+          return false;
+        }
+      }
+      
+      // Filtro de promoções (livros com desconto)
+      if (filterParam === 'promocoes') {
+        if (!livro.original_price || livro.original_price <= livro.price) {
+          return false;
+        }
       }
       
       return true;
@@ -105,10 +131,23 @@ export default function BuscaPage() {
     setOrdenacao('recentes');
   };
   
+  // Função para obter o título da página com base no filtro atual
+  const getTituloPagina = () => {
+    if (filterParam === 'lancamentos') {
+      return 'Lançamentos';
+    } else if (filterParam === 'promocoes') {
+      return 'Promoções';
+    } else if (searchQuery) {
+      return `Resultados para "${searchQuery}"`;
+    } else {
+      return 'Todos os Livros';
+    }
+  };
+  
   return (
     <main className="bg-primary-50 min-h-screen py-12">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-primary-800 mb-8">Buscar Livros</h1>
+        <h1 className="text-3xl font-bold text-primary-800 mb-8">{getTituloPagina()}</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filtros - Coluna lateral */}
