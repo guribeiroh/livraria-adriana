@@ -409,14 +409,29 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
     
     // Certificar-se de que os campos numéricos sejam números
     if (safeUpdates.price !== undefined) safeUpdates.price = Number(safeUpdates.price);
+    if (safeUpdates.original_price !== undefined) safeUpdates.original_price = Number(safeUpdates.original_price);
     if (safeUpdates.stock !== undefined) safeUpdates.stock = Number(safeUpdates.stock);
+    if (safeUpdates.pages !== undefined) safeUpdates.pages = Number(safeUpdates.pages);
+    if (safeUpdates.publication_year !== undefined) safeUpdates.publication_year = Number(safeUpdates.publication_year);
+    
+    // Certificar-se de que os campos booleanos sejam booleanos
+    if (safeUpdates.is_active !== undefined) safeUpdates.is_active = Boolean(safeUpdates.is_active);
+    if (safeUpdates.is_featured !== undefined) safeUpdates.is_featured = Boolean(safeUpdates.is_featured);
+    if (safeUpdates.is_bestseller !== undefined) safeUpdates.is_bestseller = Boolean(safeUpdates.is_bestseller);
+    if (safeUpdates.is_new !== undefined) safeUpdates.is_new = Boolean(safeUpdates.is_new);
     
     // Garantir que temos um slug válido se o título foi alterado
     if (safeUpdates.title && !safeUpdates.slug) {
       safeUpdates.slug = slugify(safeUpdates.title);
     }
     
-    console.log('Dados simplificados para atualização:', safeUpdates);
+    // Garantir que os novos campos tenham valores corretos
+    // Se for null ou undefined, definimos como null explicitamente
+    safeUpdates.publisher = safeUpdates.publisher || null;
+    safeUpdates.language = safeUpdates.language || null;
+    safeUpdates.format = safeUpdates.format || null;
+    
+    console.log('Dados simplificados para atualização:', JSON.stringify(safeUpdates, null, 2));
     
     const { data, error } = await supabase
       .from('books')
@@ -441,30 +456,38 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<Bo
 
 export async function createBook(book: Partial<Book>): Promise<Book | null> {
   try {
-    console.log('Criando novo livro com dados brutos:', book);
+    console.log('Criando novo livro com dados brutos:', JSON.stringify(book, null, 2));
     
-    // Preparar dados básicos - abordagem minimalista
+    // Preparar dados básicos - abordagem mais estruturada
     const bookData = {
       title: book.title || 'Sem título',
       author: book.author || 'Desconhecido',
       price: Number(book.price || 0),
       slug: book.slug || slugify(book.title || 'sem-titulo'),
-      // Outros campos opcionais
-      ...(book.description ? { description: book.description } : {}),
-      ...(book.isbn ? { isbn: book.isbn } : {}),
-      ...(book.category_id ? { category_id: book.category_id } : {}),
-      ...(book.cover_image ? { cover_image: book.cover_image } : {}),
-      ...(book.stock !== undefined ? { stock: Number(book.stock) } : { stock: 0 }),
+      // Valores numéricos
+      stock: Number(book.stock || 0),
+      pages: book.pages ? Number(book.pages) : null,
+      publication_year: book.publication_year ? Number(book.publication_year) : null,
+      original_price: book.original_price ? Number(book.original_price) : null,
+      // Valores de texto
+      description: book.description || null,
+      isbn: book.isbn || null,
+      cover_image: book.cover_image || null,
+      category_id: book.category_id || null,
+      // Novos campos
+      publisher: book.publisher || null,
+      language: book.language || null,
+      format: book.format || null,
       // Campos booleanos com valores padrão
-      is_active: book.is_active === undefined ? true : book.is_active,
-      is_featured: book.is_featured || false,
-      is_bestseller: book.is_bestseller || false,
-      is_new: book.is_new === undefined ? true : book.is_new,
+      is_active: book.is_active === undefined ? true : Boolean(book.is_active),
+      is_featured: book.is_featured === undefined ? false : Boolean(book.is_featured),
+      is_bestseller: book.is_bestseller === undefined ? false : Boolean(book.is_bestseller),
+      is_new: book.is_new === undefined ? true : Boolean(book.is_new),
     };
     
-    console.log('Dados simplificados para criação:', bookData);
+    console.log('Dados preparados para criação:', JSON.stringify(bookData, null, 2));
     
-    // Usar .select().maybeSingle() em vez de .select().single() para evitar erros
+    // Usar .select() para retornar os dados inseridos
     const { data, error } = await supabase
       .from('books')
       .insert(bookData)

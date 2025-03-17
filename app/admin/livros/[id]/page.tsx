@@ -170,11 +170,17 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     }
     
     // Campos opcionais, mas que devem ser validados se preenchidos
-    if (formData.publisher && !formData.publisher.trim()) {
-      newErrors.publisher = 'A editora não pode estar em branco se preenchida';
+    if (formData.publisher !== undefined && formData.publisher !== null && formData.publisher !== '' && !formData.publisher.trim()) {
+      newErrors.publisher = 'A editora não pode conter apenas espaços';
     }
     
-    // Campos que são selects podem ser validados se necessário
+    if (formData.language !== undefined && formData.language !== null && formData.language !== '' && !formData.language.trim()) {
+      newErrors.language = 'O idioma não pode conter apenas espaços';
+    }
+    
+    if (formData.format !== undefined && formData.format !== null && formData.format !== '' && !formData.format.trim()) {
+      newErrors.format = 'O formato não pode conter apenas espaços';
+    }
     
     // Descrição e categoria são consideradas opcionais
     
@@ -190,6 +196,7 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     e.preventDefault();
     
     if (!validateForm()) {
+      console.log('Validação falhou:', errors);
       return;
     }
     
@@ -202,26 +209,27 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
         author: formData.author,
         price: formData.price ? Number(formData.price) : 0,
         // Campos opcionais - apenas incluídos se tiverem valor
-        ...(formData.description ? { description: formData.description } : {}),
-        ...(formData.category_id ? { category_id: formData.category_id } : {}),
-        ...(formData.isbn ? { isbn: formData.isbn } : {}),
-        ...(formData.original_price ? { original_price: Number(formData.original_price) } : {}),
-        ...(formData.pages ? { pages: Number(formData.pages) } : {}),
-        ...(formData.publication_year ? { publication_year: Number(formData.publication_year) } : {}),
-        ...(formData.stock ? { stock: Number(formData.stock) } : {}),
-        ...(formData.is_active !== undefined ? { is_active: formData.is_active } : {}),
-        ...(formData.is_bestseller !== undefined ? { is_bestseller: formData.is_bestseller } : {}),
-        ...(formData.is_featured !== undefined ? { is_featured: formData.is_featured } : {}),
-        ...(formData.is_new !== undefined ? { is_new: formData.is_new } : {}),
-        ...(formData.cover_image ? { cover_image: formData.cover_image } : {}),
-        ...(formData.publisher ? { publisher: formData.publisher } : {}),
-        ...(formData.language ? { language: formData.language } : {}),
-        ...(formData.format ? { format: formData.format } : {}),
+        ...(formData.description ? { description: formData.description } : { description: null }),
+        ...(formData.category_id ? { category_id: formData.category_id } : { category_id: null }),
+        ...(formData.isbn ? { isbn: formData.isbn } : { isbn: null }),
+        ...(formData.original_price ? { original_price: Number(formData.original_price) } : { original_price: null }),
+        ...(formData.pages ? { pages: Number(formData.pages) } : { pages: null }),
+        ...(formData.publication_year ? { publication_year: Number(formData.publication_year) } : { publication_year: null }),
+        stock: formData.stock ? Number(formData.stock) : 0,
+        is_active: formData.is_active !== undefined ? formData.is_active : true,
+        is_bestseller: formData.is_bestseller !== undefined ? formData.is_bestseller : false,
+        is_featured: formData.is_featured !== undefined ? formData.is_featured : false,
+        is_new: formData.is_new !== undefined ? formData.is_new : true,
+        cover_image: formData.cover_image || null,
+        // Novos campos adicionados
+        publisher: formData.publisher || null,
+        language: formData.language || null,
+        format: formData.format || null,
         // Sempre incluir um slug, se disponível ou gerar a partir do título
         slug: formData.slug || slugify(formData.title || '')
       };
       
-      console.log('Dados do livro a serem salvos:', essentialFields);
+      console.log('Dados do livro a serem salvos:', JSON.stringify(essentialFields, null, 2));
       
       let resultado;
       
