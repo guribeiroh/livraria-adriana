@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Book, Category } from '../../../lib/supabase';
 import { getBookById, getCategories, updateBook, createBook } from '../../../lib/database';
 import { slugify } from '../../../lib/utils';
+import { useToast } from '@/app/context/ToastContext';
 
 export default function EditarLivroPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -48,6 +49,8 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
     format: ''
   });
 
+  const { showToast } = useToast();
+
   // Carregar dados do livro e categorias
   useEffect(() => {
     const fetchData = async () => {
@@ -67,27 +70,27 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
             });
             setImagePreview(livro.cover_image || null);
           } else {
-            alert('Livro não encontrado!');
+            showToast('error', 'Livro não encontrado!', 'O ID do livro é inválido.');
             router.push('/admin/livros');
           }
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        alert('Erro ao carregar dados. Por favor, tente novamente.');
+        showToast('error', 'Erro ao carregar dados', 'Por favor, tente novamente mais tarde.');
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchData();
-  }, [isNewBook, params.id, router]);
+  }, [isNewBook, params.id, router, showToast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Verificar tamanho do arquivo (limitar a 1MB)
       if (file.size > 1024 * 1024) {
-        alert('Arquivo muito grande. O tamanho máximo permitido é 1MB.');
+        showToast('warning', 'Arquivo muito grande', 'O tamanho máximo permitido é 1MB.');
         return;
       }
       
@@ -240,14 +243,14 @@ export default function EditarLivroPage({ params }: { params: { id: string } }) 
       }
       
       if (resultado) {
-        alert(`Livro ${isNewBook ? 'adicionado' : 'atualizado'} com sucesso!`);
+        showToast('success', `Livro ${isNewBook ? 'adicionado' : 'atualizado'} com sucesso!`);
         router.push('/admin/livros');
       } else {
         throw new Error('Falha ao salvar o livro.');
       }
     } catch (error) {
       console.error('Erro detalhado ao salvar livro:', error);
-      alert(`Erro ao ${isNewBook ? 'criar' : 'atualizar'} o livro. Verifique o console para mais detalhes.`);
+      showToast('error', `Erro ao ${isNewBook ? 'criar' : 'atualizar'} o livro`, 'Verifique o console para mais detalhes.');
     } finally {
       setIsSubmitting(false);
     }

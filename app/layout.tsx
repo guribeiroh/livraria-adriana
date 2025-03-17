@@ -3,6 +3,7 @@ import { Inter, Merriweather, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { CarrinhoProvider } from "./context/CarrinhoContext";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import NotificacaoCarrinho from './components/NotificacaoCarrinho';
@@ -44,16 +45,18 @@ export default function RootLayout({
       <body className="bg-background text-primary-900 min-h-screen flex flex-col relative selection:bg-primary-200 selection:text-primary-900 overflow-x-hidden">
         <AuthProvider>
           <CarrinhoProvider>
-            {/* Efeito decorativo */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
-            
-            <Navbar />
-            <NotificacaoCarrinho />
-            <main className="pt-20 flex-grow">
-              {children}
-            </main>
-            <Footer />
-            <FloatingCartButton />
+            <ToastProvider>
+              {/* Efeito decorativo */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-500 to-secondary-400 z-50"></div>
+              
+              <Navbar />
+              <NotificacaoCarrinho />
+              <main className="pt-20 flex-grow">
+                {children}
+              </main>
+              <Footer />
+              <FloatingCartButton />
+            </ToastProvider>
           </CarrinhoProvider>
         </AuthProvider>
       </body>

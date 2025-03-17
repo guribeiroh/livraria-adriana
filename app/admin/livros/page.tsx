@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Book, Category } from '../../lib/supabase';
 import { getAllBooks, getCategories, deleteBook } from '../../lib/database';
+import { useToast } from '@/app/context/ToastContext';
 
 export default function AdminLivrosPage() {
   const [livrosList, setLivrosList] = useState<Book[]>([]);
@@ -15,6 +16,7 @@ export default function AdminLivrosPage() {
   const [itemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
   
   // Carregar livros e categorias
   useEffect(() => {
@@ -64,29 +66,22 @@ export default function AdminLivrosPage() {
 
   // Função para excluir livro
   const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este livro?')) {
+    if (window.confirm('Tem certeza que deseja excluir este livro?')) {
       try {
         setIsLoading(true);
-        console.log(`Solicitando exclusão do livro ${id}`);
-        
         const success = await deleteBook(id);
         
         if (success) {
-          console.log(`Livro ${id} excluído com sucesso`);
-          // Atualize a lista local
-          setLivrosList(prev => prev.filter(livro => livro.id !== id));
-          alert('Livro excluído com sucesso!');
-          
-          // Recarregue a lista completa para garantir sincronização
-          const livrosRecarregados = await getAllBooks();
-          setLivrosList(livrosRecarregados);
+          showToast('success', 'Livro excluído com sucesso!');
+          // Atualizar a lista de livros
+          const updatedBooks = await getAllBooks();
+          setLivrosList(updatedBooks);
         } else {
-          console.error(`Falha ao excluir o livro ${id}`);
-          alert('Erro ao excluir o livro. Tente novamente.');
+          showToast('error', 'Erro ao excluir o livro', 'Tente novamente mais tarde.');
         }
-      } catch (err) {
-        console.error('Erro ao excluir livro:', err);
-        alert('Erro ao excluir o livro. Tente novamente.');
+      } catch (error) {
+        console.error('Erro ao excluir livro:', error);
+        showToast('error', 'Erro ao excluir o livro', 'Ocorreu um erro inesperado.');
       } finally {
         setIsLoading(false);
       }

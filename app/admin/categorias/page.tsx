@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Category } from '../../lib/supabase';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../lib/database';
+import { slugify } from '@/app/lib/utils';
+import { useToast } from '@/app/context/ToastContext';
 
 export default function AdminCategoriasPage() {
   const [categorias, setCategorias] = useState<Category[]>([]);
@@ -23,6 +25,8 @@ export default function AdminCategoriasPage() {
     description: '', 
     slug: '' 
   });
+
+  const { showToast } = useToast();
 
   // Carregar categorias do banco de dados
   useEffect(() => {
@@ -52,34 +56,33 @@ export default function AdminCategoriasPage() {
   // Adicionar nova categoria
   const handleAddCategoria = async () => {
     if (!newCategoria.name.trim()) {
-      alert('O nome da categoria é obrigatório!');
+      showToast('warning', 'Validação', 'O nome da categoria é obrigatório!');
       return;
     }
     
     try {
       setIsLoading(true);
       
-      // Gerar slug a partir do nome se não fornecido
-      const categoriaData = {
-        ...newCategoria,
-        name: newCategoria.name.trim(),
-        description: newCategoria.description.trim() || null
-      };
+      const slug = slugify(newCategoria.name);
       
-      const result = await createCategory(categoriaData);
+      const result = await createCategory({
+        name: newCategoria.name,
+        description: newCategoria.description,
+        slug
+      });
       
       if (result) {
         // Adicionar a nova categoria à lista local
         setCategorias(prev => [...prev, result]);
         setNewCategoria({ name: '', description: '', slug: '' });
         setIsAdding(false);
-        alert('Categoria adicionada com sucesso!');
+        showToast('success', 'Categoria adicionada com sucesso!');
       } else {
-        alert('Erro ao adicionar categoria. Tente novamente.');
+        showToast('error', 'Erro ao adicionar categoria', 'Tente novamente mais tarde.');
       }
     } catch (err) {
       console.error('Erro ao adicionar categoria:', err);
-      alert('Erro ao adicionar categoria. Tente novamente.');
+      showToast('error', 'Erro ao adicionar categoria', 'Ocorreu um erro inesperado.');
     } finally {
       setIsLoading(false);
     }
@@ -98,32 +101,32 @@ export default function AdminCategoriasPage() {
   // Salvar edição de categoria
   const handleSaveEdit = async (id: string) => {
     if (!editingValues.name.trim()) {
-      alert('O nome da categoria é obrigatório!');
+      showToast('warning', 'Validação', 'O nome da categoria é obrigatório!');
       return;
     }
 
     try {
       setIsLoading(true);
       
-      const categoriaData = {
-        ...editingValues,
-        name: editingValues.name.trim(),
-        description: editingValues.description.trim() || null
-      };
+      const slug = slugify(editingValues.name);
       
-      const result = await updateCategory(id, categoriaData);
+      const result = await updateCategory(id, {
+        name: editingValues.name,
+        description: editingValues.description,
+        slug
+      });
       
       if (result) {
         // Atualizar categoria na lista local
         setCategorias(prev => prev.map(cat => cat.id === id ? result : cat));
         setEditingId(null);
-        alert('Categoria atualizada com sucesso!');
+        showToast('success', 'Categoria atualizada com sucesso!');
       } else {
-        alert('Erro ao atualizar categoria. Tente novamente.');
+        showToast('error', 'Erro ao atualizar categoria', 'Tente novamente mais tarde.');
       }
     } catch (err) {
       console.error('Erro ao atualizar categoria:', err);
-      alert('Erro ao atualizar categoria. Tente novamente.');
+      showToast('error', 'Erro ao atualizar categoria', 'Ocorreu um erro inesperado.');
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +139,7 @@ export default function AdminCategoriasPage() {
 
   // Excluir categoria
   const handleDeleteCategoria = async (id: string, nome: string) => {
-    if (confirm(`Tem certeza que deseja excluir a categoria "${nome}"?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir a categoria "${nome}"?`)) {
       try {
         setIsLoading(true);
         
@@ -145,13 +148,13 @@ export default function AdminCategoriasPage() {
         if (success) {
           // Remover categoria da lista local
           setCategorias(prev => prev.filter(cat => cat.id !== id));
-          alert('Categoria excluída com sucesso!');
+          showToast('success', 'Categoria excluída com sucesso!');
         } else {
-          alert('Não foi possível excluir esta categoria. Ela pode estar sendo usada por livros ou outro erro ocorreu.');
+          showToast('error', 'Erro ao excluir categoria', 'Esta categoria pode estar sendo usada por livros ou outro erro ocorreu.');
         }
       } catch (err) {
         console.error('Erro ao excluir categoria:', err);
-        alert('Erro ao excluir categoria. Tente novamente.');
+        showToast('error', 'Erro ao excluir categoria', 'Ocorreu um erro inesperado.');
       } finally {
         setIsLoading(false);
       }
