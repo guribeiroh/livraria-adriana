@@ -135,7 +135,7 @@ export default function BookCard({ book, index = 0 }: BookCardProps) {
           
           <Button
             variant="primary" 
-            size="xs"
+            size="sm"
             onClick={handleAdicionarAoCarrinho}
             disabled={!isAvailable}
             className={`rounded-full ${botaoAnimado ? 'animate-cart-pulse' : ''}`}
