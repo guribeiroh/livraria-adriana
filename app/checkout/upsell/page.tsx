@@ -152,7 +152,7 @@ export default function UpsellPage() {
                   Selecione {livrosASelecionados} livro(s) abaixo para completar sua oferta:
                 </p>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {livrosRecomendados.map((livro) => (
                     <div key={livro.id} className="relative">
                       <div className={`
